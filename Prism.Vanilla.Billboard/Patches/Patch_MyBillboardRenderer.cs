@@ -582,7 +582,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Quads.Count > 0)
                 {
                     rc.SetInputLayout(_ilQuad);
-                    rc.VertexShader.Set(!lit ? _vsQuad : _vsQuad);
+                    rc.VertexShader.Set(lit ? _vsQuadLit : _vsQuad);
                     rc.DrawIndexedInstanced(6, batch.Quads.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Quads.Count;
                 }
@@ -590,7 +590,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Triangles.Count > 0)
                 {
                     rc.SetInputLayout(_ilTri);
-                    rc.VertexShader.Set(!lit ? _vsTri : _vsTri);
+                    rc.VertexShader.Set(lit ? _vsTriLit : _vsTri);
                     rc.DrawIndexedInstanced(3, batch.Triangles.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Triangles.Count;
                 }
@@ -598,7 +598,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Points.Count > 0)
                 {
                     rc.SetInputLayout(_ilPoint);
-                    rc.VertexShader.Set(!lit ? _vsPoint : _vsPoint);
+                    rc.VertexShader.Set(lit ? _vsPointLit : _vsPoint);
                     rc.DrawIndexedInstanced(6, batch.Points.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Points.Count;
                 }
@@ -606,7 +606,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Lines.Count > 0)
                 {
                     rc.SetInputLayout(_ilLine);
-                    rc.VertexShader.Set(!lit ? _vsLine : _vsLine);
+                    rc.VertexShader.Set(lit ? _vsLineLit : _vsLine);
                     rc.DrawIndexedInstanced(6, batch.Lines.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Lines.Count;
                 }
