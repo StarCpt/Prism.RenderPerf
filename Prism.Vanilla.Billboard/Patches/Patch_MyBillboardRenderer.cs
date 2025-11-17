@@ -420,10 +420,15 @@ public static class Patch_MyBillboardRenderer
         using (var mapping = _cbv.MapWriteDiscard(rc))
         {
             var matrices = MyRender11.Environment.Matrices;
+            ref var fog = ref MyCommon.FrameConstantsData.Fog;
             var frameData = new FrameConstants
             {
                 ViewMatrixAt0 = matrices.ViewAt0,
                 ProjMatrix = matrices.Projection,
+
+                FogColor = fog.Color,
+                FogDensity = fog.Density,
+                FogMultiplier = fog.Mult,
             };
             mapping.WriteAndPosition(ref frameData);
 

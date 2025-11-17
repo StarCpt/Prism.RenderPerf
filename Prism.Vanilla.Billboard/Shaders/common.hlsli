@@ -82,6 +82,14 @@ cbuffer FrameConstants : register(b0)
     float4x4 ViewMatrix;
     float4x4 ProjMatrix;
     
+    float3 FogColor;
+    float FogDensity;
+    
+    float FogMultiplier;
+    uint _pad1;
+    uint _pad2;
+    uint _pad3;
+    
     float4x4 ViewProjections[33];
 };
 
@@ -117,6 +125,13 @@ cbuffer MaterialConstants : register(b1)
 
 #define FLOAT_EPSILON 1E-6
 
+float3 Fog(float3 color, float dist)
+{
+    dist = clamp(dist, 0, 1000);
+    float fog0 = FogMultiplier * (1 - exp(-dist * FogDensity));
+    return lerp(color, FogColor, fog0);
+}
+
 void WeightedOITCendos(float4 color, float linearZ, out float4 accumTarget, out float4 coverageTarget)
 {
     // clip colors below very low transparency
@@ -124,7 +139,7 @@ void WeightedOITCendos(float4 color, float linearZ, out float4 accumTarget, out 
     
     // apply fog
     if (color.a > 0.001f)
-        color.rgb *= color.a;
+        color.rgb = Fog(color.rgb / color.a, -linearZ) * color.a;
 
     // Insert your favorite weighting function here. The color-based factor
     // avoids color pollution from the edges of wispy clouds. The z-based
