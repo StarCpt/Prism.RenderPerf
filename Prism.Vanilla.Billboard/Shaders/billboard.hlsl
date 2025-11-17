@@ -1,15 +1,20 @@
 #include "common.hlsli"
 #include <Math/Math.hlsli>
 
-SamplerState LinearSampler : register(s2);
-
-#if defined(SINGLE_CHANNEL)
-Texture2D<float> billboardTex : register(t1);
+#if defined(LIT_PARTICLE)
+#include <Shadows/Csm.hlsli>
+#include <Lighting/EnvAmbient.hlsli>
 #else
-Texture2D<float4> billboardTex : register(t1);
+SamplerState LinearSampler : register(s2);
 #endif
 
-Texture2D<float> DepthTexture : register(t2);
+#if defined(SINGLE_CHANNEL)
+Texture2D<float> billboardTex : register(t0);
+#else
+Texture2D<float4> billboardTex : register(t0);
+#endif
+
+Texture2D<float> DepthTexture : register(t1);
 
 static const float2 UVTable[4] =
 {
@@ -65,6 +70,15 @@ float GetLineColorMulti(const float3 pos, const float3 dir)
     return (1 - pow(abs(dot(normalize(pos), dir)), 30)) * 0.5;
 }
 
+#if defined(LIT_PARTICLE)
+float3 GetVertexLight(const float3 pos)
+{
+    float3 V = normalize(-pos);
+    return CalculateShadowFast(pos) + AmbientDiffuse(V, -1) * frame_.Light.ambientDiffuseFactor;
+}
+#endif
+
+// TODO: eliminate duplicated code
 void vs_quad(uint vertexId : SV_VertexID, VS_INPUT_QUAD input, out VS_Output result)
 {
     result.Position = mul(ViewProjections[input.ViewProjId], float4(input.Vertices[vertexId].xyz, 1));
@@ -77,6 +91,10 @@ void vs_quad(uint vertexId : SV_VertexID, VS_INPUT_QUAD input, out VS_Output res
     result.Color = input.Color;
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+    
+#if defined(LIT_PARTICLE)
+    result.Light = GetVertexLight(input.Vertices[vertexId].xyz);
+#endif
 }
 
 void vs_tri(uint vertexId : SV_VertexID, VS_INPUT_TRI input, out VS_Output result)
@@ -91,6 +109,10 @@ void vs_tri(uint vertexId : SV_VertexID, VS_INPUT_TRI input, out VS_Output resul
     result.Color = input.Color;
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+    
+#if defined(LIT_PARTICLE)
+    result.Light = GetVertexLight(input.Vertices[vertexId].xyz);
+#endif
 }
 
 void vs_point(uint vertexId : SV_VertexID, VS_INPUT_POINT input, out VS_Output result)
@@ -106,6 +128,10 @@ void vs_point(uint vertexId : SV_VertexID, VS_INPUT_POINT input, out VS_Output r
     result.Color = input.Color;
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+    
+#if defined(LIT_PARTICLE)
+    result.Light = GetVertexLight(worldPos);
+#endif
 }
 
 void vs_line(uint vertexId : SV_VertexID, VS_INPUT_LINE input, out VS_Output result)
@@ -122,6 +148,10 @@ void vs_line(uint vertexId : SV_VertexID, VS_INPUT_LINE input, out VS_Output res
     result.Color.xyz *= GetLineColorMulti(input.Origin, input.Direction);
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+    
+#if defined(LIT_PARTICLE)
+    result.Light = GetVertexLight(worldPos);
+#endif
 }
 
 #if defined(OIT)
@@ -143,6 +173,10 @@ float4 ps(VS_Output input) : SV_Target0
     float linearParticleDepth = linearize_depth(input.Position.z, ProjMatrix);
     float softParticleFade = CalcSoftParticle(input.SoftParticleDistanceScale, -linearSceneDepth, -linearParticleDepth);
     color *= softParticleFade;
+#endif
+    
+#if defined(LIT_PARTICLE)
+    color.xyz *= input.Light;
 #endif
     
 #if defined(OIT)

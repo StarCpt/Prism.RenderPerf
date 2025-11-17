@@ -75,9 +75,13 @@ struct VS_Output
     nointerpolation float4 Color : COLOR;
     nointerpolation float AlphaCutout : ALPHACUTOUT;
     nointerpolation float SoftParticleDistanceScale : SOFTPARTICLEDISTSCALE;
+    
+#if defined(LIT_PARTICLE)
+    float3 Light : LIGHT;
+#endif
 };
 
-cbuffer FrameConstants : register(b0)
+cbuffer FrameConstants : register(b1)
 {
     float4x4 ViewMatrix;
     float4x4 ProjMatrix;
@@ -111,7 +115,7 @@ struct MaterialInfo
     }
 };
 
-cbuffer MaterialConstants : register(b1)
+cbuffer MaterialConstants : register(b2)
 {
     MaterialInfo Material;
 };

@@ -146,10 +146,10 @@ public static class Patch_MyBillboardRenderer
     static IConstantBuffer _cbvMaterials;
     static IIndexBuffer _indices; // for tri use first 3 indices
 
-    static VertexShader _vsQuad;
-    static VertexShader _vsTri;
-    static VertexShader _vsPoint;
-    static VertexShader _vsLine;
+    static VertexShader _vsQuad, _vsQuadLit;
+    static VertexShader _vsTri, _vsTriLit;
+    static VertexShader _vsPoint, _vsPointLit;
+    static VertexShader _vsLine, _vsLineLit;
     // render passes
     // flags
     static PixelShader[,] _pixelShaders = new PixelShader[NUM_RENDER_PASSES, (int)BillboardFlags.MAX_NUM];
@@ -203,6 +203,10 @@ public static class Patch_MyBillboardRenderer
         _vsTri   = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_tri");
         _vsPoint = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_point");
         _vsLine  = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_line");
+        _vsQuadLit  = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_quad", new ShaderMacro("LIT_PARTICLE", null));
+        _vsTriLit   = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_tri", new ShaderMacro("LIT_PARTICLE", null));
+        _vsPointLit = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_point", new ShaderMacro("LIT_PARTICLE", null));
+        _vsLineLit  = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_line", new ShaderMacro("LIT_PARTICLE", null));
 
         var defines = new List<ShaderMacro>();
         for (int pass = 0; pass < NUM_RENDER_PASSES; pass++)
@@ -475,7 +479,7 @@ public static class Patch_MyBillboardRenderer
         rc.SetRtv(MyGBuffer.Main.ResolvedDepthStencil.DsvRoDepth, MyGBuffer.Main.LBuffer);
         rc.SetScreenViewport();
 
-        Render(rc, depthRead, MyBillboard.BlendTypeEnum.AdditiveBottom, false);
+        Render(rc, depthRead, MyBillboard.BlendTypeEnum.AdditiveBottom, false, true);
         rc.SetRtvNull();
 
         return false;
@@ -490,7 +494,7 @@ public static class Patch_MyBillboardRenderer
         rc.SetRtv(MyGBuffer.Main.LBuffer);
         rc.SetScreenViewport();
 
-        Render(rc, null, MyBillboard.BlendTypeEnum.AdditiveTop, false);
+        Render(rc, null, MyBillboard.BlendTypeEnum.AdditiveTop, false, true);
         rc.SetRtvNull();
 
         return false;
@@ -505,7 +509,7 @@ public static class Patch_MyBillboardRenderer
         rc.SetDepthStencilState(MyDepthStencilStateManager.DefaultDepthState);
         rc.SetRtv(MyGBuffer.Main.ResolvedDepthStencil.DsvRoDepth, target);
 
-        Render(rc, depthRead, MyBillboard.BlendTypeEnum.LDR, false);
+        Render(rc, depthRead, MyBillboard.BlendTypeEnum.LDR, false, false);
         rc.SetRtvNull();
 
         return false;
@@ -520,7 +524,7 @@ public static class Patch_MyBillboardRenderer
         rc.SetDepthStencilState(MyDepthStencilStateManager.DefaultDepthState);
         rc.SetRtv(MyGBuffer.Main.ResolvedDepthStencil.DsvRoDepth, target);
 
-        Render(rc, depthRead, MyBillboard.BlendTypeEnum.PostPP, false);
+        Render(rc, depthRead, MyBillboard.BlendTypeEnum.PostPP, false, false);
         rc.SetRtvNull();
 
         return false;
@@ -533,12 +537,12 @@ public static class Patch_MyBillboardRenderer
         rc.SetDepthStencilState(MyDepthStencilStateManager.DefaultDepthState);
         rc.SetScreenViewport();
 
-        Render(rc, depthRead, MyBillboard.BlendTypeEnum.Standard, true);
+        Render(rc, depthRead, MyBillboard.BlendTypeEnum.Standard, true, true);
 
         return false;
     }
 
-    private static unsafe void Render(MyRenderContext rc, ISrvBindable? depthRead, MyBillboard.BlendTypeEnum blendType, bool oit)
+    private static unsafe void Render(MyRenderContext rc, ISrvBindable? depthRead, MyBillboard.BlendTypeEnum blendType, bool oit, bool lit)
     {
         oit &= MyRender11.DebugOverrides.OIT;
 
@@ -548,7 +552,7 @@ public static class Patch_MyBillboardRenderer
 
         BindCommonResources(rc);
         rc.SetVertexBuffer(0, group.InstanceBuffer);
-        rc.PixelShader.SetSrv(2, depthRead);
+        rc.PixelShader.SetSrv(1, depthRead);
 
         BillboardFlags globalFlags = BillboardFlags.None;
         globalFlags |= oit ? BillboardFlags.OIT : BillboardFlags.None;
@@ -564,10 +568,10 @@ public static class Patch_MyBillboardRenderer
             {
                 // material info cbv
                 int materialCbvStride = Align(sizeof(MaterialInfo), 16 * 16);
-                rc.AllShaderStages.SetConstantBuffer(1, _cbvMaterials, materialCbvStride * material.MaterialInfoIndex, materialCbvStride);
+                rc.AllShaderStages.SetConstantBuffer(2, _cbvMaterials, materialCbvStride * material.MaterialInfoIndex, materialCbvStride);
 
                 // texture
-                rc.PixelShader.SetSrv(1, material.Texture);
+                rc.PixelShader.SetSrv(0, material.Texture);
 
                 BillboardFlags flags = globalFlags | material.Flags;
                 rc.PixelShader.Set(_pixelShaders[(int)blendType, (int)flags]);
@@ -575,7 +579,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Quads.Count > 0)
                 {
                     rc.SetInputLayout(_ilQuad);
-                    rc.VertexShader.Set(_vsQuad);
+                    rc.VertexShader.Set(!lit ? _vsQuad : _vsQuad);
                     rc.DrawIndexedInstanced(6, batch.Quads.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Quads.Count;
                 }
@@ -583,7 +587,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Triangles.Count > 0)
                 {
                     rc.SetInputLayout(_ilTri);
-                    rc.VertexShader.Set(_vsTri);
+                    rc.VertexShader.Set(!lit ? _vsTri : _vsTri);
                     rc.DrawIndexedInstanced(3, batch.Triangles.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Triangles.Count;
                 }
@@ -591,7 +595,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Points.Count > 0)
                 {
                     rc.SetInputLayout(_ilPoint);
-                    rc.VertexShader.Set(_vsPoint);
+                    rc.VertexShader.Set(!lit ? _vsPoint : _vsPoint);
                     rc.DrawIndexedInstanced(6, batch.Points.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Points.Count;
                 }
@@ -599,7 +603,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Lines.Count > 0)
                 {
                     rc.SetInputLayout(_ilLine);
-                    rc.VertexShader.Set(_vsLine);
+                    rc.VertexShader.Set(!lit ? _vsLine : _vsLine);
                     rc.DrawIndexedInstanced(6, batch.Lines.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Lines.Count;
                 }
@@ -616,9 +620,20 @@ public static class Patch_MyBillboardRenderer
     private static void BindCommonResources(MyRenderContext rc)
     {
         rc.SetRasterizerState(MyRasterizerStateManager.NocullRasterizerState);
-        rc.AllShaderStages.SetConstantBuffer(0, _cbv);
+
+        rc.AllShaderStages.SetConstantBuffer(1, _cbv);
+        rc.VertexShader.SetConstantBuffer(0, MyCommon.FrameConstants);
+        rc.AllShaderStages.SetConstantBuffer(4, MyManagers.Shadows.ShadowCascades.CascadeConstantBuffer);
+
+        rc.VertexShader.SetSamplers(0, MySamplerStateManager.StandardSamplers);
+        rc.VertexShader.SetSampler(15, MySamplerStateManager.Shadowmap);
+
+        rc.VertexShader.SetSrv(16, MyManagers.Shadows.ShadowCascades.CascadeShadowmapArray);
+        rc.VertexShader.SetSrv(2, MyEyeAdaptation.GetExposure());
+        rc.PixelShader.SetSrv(11, MyManagers.EnvironmentProbe.CloseCubemapFinal);
+        rc.PixelShader.SetSrv(17, MyManagers.EnvironmentProbe.FarCubemapFinal);
+
         rc.SetIndexBuffer(_indices);
-        rc.PixelShader.SetSampler(2, MySamplerStateManager.Linear);
         rc.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
     }
 
