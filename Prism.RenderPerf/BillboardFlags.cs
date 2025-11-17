@@ -3,7 +3,7 @@
 namespace Prism.RenderPerf;
 
 [Flags]
-enum BillboardFlags : int
+public enum BillboardFlags : int
 {
     None = 0,
     SingleChannel = 1,
