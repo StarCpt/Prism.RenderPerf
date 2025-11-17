@@ -190,6 +190,8 @@ class BillboardRenderGroup : IDisposable
                     UV1 = new HalfVector2(tri.UV1),
                     UV2 = new HalfVector2(tri.UV2),
 
+                    Normal = tri.Normal0,
+
                     Color = new HalfVector4(
                         billboard.Color.X * billboard.ColorIntensity,
                         billboard.Color.Y * billboard.ColorIntensity,

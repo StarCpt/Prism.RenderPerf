@@ -258,6 +258,9 @@ public static class Patch_MyBillboardRenderer
             new InputElement("POSITION",              2, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1), // V2
             new InputElement("TEXCOORD",              2, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1), // UV2
 
+            new InputElement("NORMAL",                0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("PADDING",               0, Format.R32_UInt,           -1, 0, InputClassification.PerInstanceData, 1),
+
             new InputElement("VIEWPROJ",              0, Format.R32_UInt,           -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("REFLECTIVITY",          0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("ALPHACUTOUT",           0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),

@@ -52,6 +52,9 @@ struct TriBillboardData
     public float3 V2;
     public HalfVector2 UV2;
 
+    public float3 Normal;
+    private uint _padding1;
+
     public uint CustomViewProjection;
     public float Reflectivity;
     public float AlphaCutout;

@@ -27,6 +27,9 @@ struct VS_INPUT_TRI
     float3 Vertices[3] : POSITION;
     float2 Texcoords[3] : TEXCOORD;
     
+    float3 Normal : NORMAL;
+    uint _pad0 : PADDING;
+    
     uint ViewProjId : VIEWPROJ;
     float Reflectivity : REFLECTIVITY;
     float AlphaCutout : ALPHACUTOUT;
@@ -71,10 +74,13 @@ struct VS_INPUT_LINE
 struct VS_Output
 {
     float4 Position : SV_Position;
+    float3 WorldPos : WORLDPOS;
     float2 UV : TEXCOORD0;
     nointerpolation float4 Color : COLOR;
+    nointerpolation float Reflectivity : REFLECTIVITY;
     nointerpolation float AlphaCutout : ALPHACUTOUT;
     nointerpolation float SoftParticleDistanceScale : SOFTPARTICLEDISTSCALE;
+    nointerpolation float3 Normal : NORMAL;
     
 #if defined(LIT_PARTICLE)
     float3 Light : LIGHT;

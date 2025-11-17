@@ -1,12 +1,7 @@
 #include "common.hlsli"
 #include <Math/Math.hlsli>
-
-#if defined(LIT_PARTICLE)
 #include <Shadows/Csm.hlsli>
 #include <Lighting/EnvAmbient.hlsli>
-#else
-SamplerState LinearSampler : register(s2);
-#endif
 
 #if defined(SINGLE_CHANNEL)
 Texture2D<float> billboardTex : register(t0);
@@ -89,8 +84,14 @@ void vs_quad(uint vertexId : SV_VertexID, VS_INPUT_QUAD input, out VS_Output res
     result.UV = lerp(matUVStart, matUVEnd, result.UV);
     
     result.Color = input.Color;
+    result.Reflectivity = input.Reflectivity;
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+    
+    float3 v0 = input.Vertices[0];
+    float3 v1 = input.Vertices[1];
+    float3 v2 = input.Vertices[2];
+    result.Normal = normalize(cross(v1 - v0, v2 - v0));
     
 #if defined(LIT_PARTICLE)
     result.Light = GetVertexLight(input.Vertices[vertexId].xyz);
@@ -107,8 +108,11 @@ void vs_tri(uint vertexId : SV_VertexID, VS_INPUT_TRI input, out VS_Output resul
     result.UV = lerp(matUVStart, matUVEnd, result.UV);
     
     result.Color = input.Color;
+    result.Reflectivity = input.Reflectivity;
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+    
+    result.Normal = input.Normal;
     
 #if defined(LIT_PARTICLE)
     result.Light = GetVertexLight(input.Vertices[vertexId].xyz);
@@ -126,8 +130,14 @@ void vs_point(uint vertexId : SV_VertexID, VS_INPUT_POINT input, out VS_Output r
     result.UV = lerp(matUVStart, matUVEnd, result.UV);
     
     result.Color = input.Color;
+    result.Reflectivity = input.Reflectivity;
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+    
+    float3 v0 = GetPointQuadVertex(0, input.Position, input.Radius, input.Angle);
+    float3 v1 = GetPointQuadVertex(1, input.Position, input.Radius, input.Angle);
+    float3 v2 = GetPointQuadVertex(2, input.Position, input.Radius, input.Angle);
+    result.Normal = normalize(cross(v1 - v0, v2 - v0));
     
 #if defined(LIT_PARTICLE)
     result.Light = GetVertexLight(worldPos);
@@ -146,8 +156,14 @@ void vs_line(uint vertexId : SV_VertexID, VS_INPUT_LINE input, out VS_Output res
     
     result.Color = input.Color;
     result.Color.xyz *= GetLineColorMulti(input.Origin, input.Direction);
+    result.Reflectivity = input.Reflectivity;
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+    
+    float3 v0 = GetLineQuadVertex(0, input.Origin, input.Direction, input.Length, input.Thickness);
+    float3 v1 = GetLineQuadVertex(1, input.Origin, input.Direction, input.Length, input.Thickness);
+    float3 v2 = GetLineQuadVertex(2, input.Origin, input.Direction, input.Length, input.Thickness);
+    result.Normal = normalize(cross(v1 - v0, v2 - v0));
     
 #if defined(LIT_PARTICLE)
     result.Light = GetVertexLight(worldPos);
@@ -174,6 +190,17 @@ float4 ps(VS_Output input) : SV_Target0
     float softParticleFade = CalcSoftParticle(input.SoftParticleDistanceScale, -linearSceneDepth, -linearParticleDepth);
     color *= softParticleFade;
 #endif
+    
+    if (input.Reflectivity > 0)
+    {
+        float3 N = input.Normal;
+        float3 viewVector = normalize(-input.WorldPos);
+        
+        float3 reflectionSample = AmbientSpecularBillboard(0.04f, 0.95f, N, viewVector, -1);
+        float3 reflectionColor = lerp(color.xyz, reflectionSample, input.Reflectivity);
+        
+        color = float4(reflectionColor, max(color.w, input.Reflectivity));
+    }
     
 #if defined(LIT_PARTICLE)
     color.xyz *= input.Light;
