@@ -27,10 +27,10 @@ class BillboardRenderGroup : IDisposable
 
         public void Clear()
         {
-            Quads.Clear();
-            Triangles.Clear();
-            Points.Clear();
-            Lines.Clear();
+            Quads.ClearFast();
+            Triangles.ClearFast();
+            Points.ClearFast();
+            Lines.ClearFast();
         }
     }
 

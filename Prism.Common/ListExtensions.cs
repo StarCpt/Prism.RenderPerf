@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using HarmonyLib;
+using System.Reflection;
 using System.Reflection.Emit;
 
 #pragma warning disable IDE0130 // Namespace does not match folder structure
@@ -38,6 +39,32 @@ namespace System.Collections.Generic
             if (startIndex + length > list.Count)
                 length = list.Count - startIndex;
             return ArrayAccessor<T>.Getter.Invoke(list).AsSpan(startIndex, length);
+        }
+
+        private static class ListAccessor<T>
+        {
+            public static readonly AccessTools.FieldRef<List<T>, int> SizeFieldRef;
+            public static readonly AccessTools.FieldRef<List<T>, int> VersionFieldRef;
+
+            static ListAccessor()
+            {
+                SizeFieldRef    = AccessTools.FieldRefAccess<List<T>, int>(typeof(List<T>).GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance));
+                VersionFieldRef = AccessTools.FieldRefAccess<List<T>, int>(typeof(List<T>).GetField("_version", BindingFlags.NonPublic | BindingFlags.Instance));
+            }
+        }
+
+        /// <summary>
+        /// Clear the list without zeroing the internal array.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        public static void ClearFast<T>(this List<T> list)
+        {
+            if (list.Count > 0)
+            {
+                ListAccessor<T>.SizeFieldRef(list) = 0;
+                ListAccessor<T>.VersionFieldRef(list)++;
+            }
         }
     }
 }
