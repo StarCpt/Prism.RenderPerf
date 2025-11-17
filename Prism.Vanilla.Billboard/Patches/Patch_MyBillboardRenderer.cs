@@ -196,6 +196,10 @@ public static class Patch_MyBillboardRenderer
         _vsTri?.Dispose();
         _vsPoint?.Dispose();
         _vsLine?.Dispose();
+        _vsQuadLit?.Dispose();
+        _vsTriLit?.Dispose();
+        _vsPointLit?.Dispose();
+        _vsLineLit?.Dispose();
 
         foreach (var ps in _pixelShaders)
             ps?.Dispose();
