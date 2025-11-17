@@ -1,5 +1,5 @@
 ﻿using Prism.Maths;
-using Prism.Vanilla.Billboard.ShaderTypes;
+using Prism.RenderPerf.ShaderTypes;
 using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using VRageMath;
 using VRageMath.PackedVector;
 using VRageRender;
 
-namespace Prism.Vanilla.Billboard;
+namespace Prism.RenderPerf;
 
 class BillboardRenderGroup : IDisposable
 {
@@ -103,7 +103,7 @@ class BillboardRenderGroup : IDisposable
                 Vector3.TransformNormal(ref direction, ref mat, out direction);
             }
 
-            Vector3D cameraPosForProj = (billboard.CustomViewProjection == -1) ? MyRender11.Environment.Matrices.CameraPosition : MyRenderProxy.BillboardsViewProjectionRead[billboard.CustomViewProjection].CameraPosition;
+            Vector3D cameraPosForProj = billboard.CustomViewProjection == -1 ? MyRender11.Environment.Matrices.CameraPosition : MyRenderProxy.BillboardsViewProjectionRead[billboard.CustomViewProjection].CameraPosition;
             Vector3D.Subtract(ref origin, ref cameraPosForProj, out origin);
                 
             batch.Lines.Add(new BillboardDataUnion
@@ -135,14 +135,10 @@ class BillboardRenderGroup : IDisposable
         {
             Vector3D pos = billboard.Position0;
             if (billboard.ParentID != uint.MaxValue && TryGetParentMatrix(billboard, out MatrixD mat))
-            {
                 Vector3D.Transform(ref pos, ref mat, out pos);
-            }
 
             if (billboard.CustomViewProjection == -1)
-            {
                 Vector3D.Subtract(ref pos, ref MyRender11.Environment.Matrices.CameraPosition, out pos);
-            }
 
             batch.Points.Add(new BillboardDataUnion
             {
@@ -261,9 +257,7 @@ class BillboardRenderGroup : IDisposable
             return;
 
         if (InstanceBuffer is null)
-        {
             InstanceBuffer = MyManagers.Buffers.CreateVertexBuffer($"Prism.Billboard.InstanceBuffer{(int)BlendType}", TotalBillboardCount, sizeof(BillboardDataUnion), usage: ResourceUsage.Dynamic, isGlobal: true);
-        }
         else if (InstanceBuffer.ElementCount < TotalBillboardCount)
         {
             MyManagers.Buffers.Resize(InstanceBuffer, TotalBillboardCount);

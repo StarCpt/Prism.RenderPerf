@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using Prism.Common;
 using Prism.Maths;
-using Prism.Vanilla.Billboard.ShaderTypes;
+using Prism.RenderPerf.ShaderTypes;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -20,7 +20,7 @@ using VRageMath;
 using VRageMath.PackedVector;
 using VRageRender;
 
-namespace Prism.Vanilla.Billboard.Patches;
+namespace Prism.RenderPerf.Patches;
 
 // must be padded to a multiple of 256 bytes
 struct MaterialInfo
@@ -55,7 +55,7 @@ class Material
             var atlasScale = new Vector2(atlasElement.UvOffsetScale.Z, atlasElement.UvOffsetScale.W);
             Info = new MaterialInfo
             {
-                UVOffset = new HalfVector2(atlasOffset + (_material.UVOffset * atlasScale)),
+                UVOffset = new HalfVector2(atlasOffset + _material.UVOffset * atlasScale),
                 UVSize = new HalfVector2(_material.UVSize * atlasScale),
                 AlphaSaturation = _material.AlphaSaturation,
                 SoftParticleDistanceScale = _material.SoftParticleDistanceScale,
@@ -78,9 +78,7 @@ class Material
     public void UpdateTexture()
     {
         if (_material.UseAtlas)
-        {
             Texture = MyBillboardRenderer.m_atlas.FindElement(_material.Texture).Texture.Texture;
-        }
         else if (_material.TextureType is MyTransparentMaterialTextureType.FileTexture)
         {
             IMyStreamedTexture? fileTexure = null;
@@ -88,9 +86,7 @@ class Material
             {
                 fileTexure = MyManagers.Textures.GetTexture(_material.Texture, MyFileTextureEnum.GUI);
                 if (fileTexure.Texture.IsTextureLoaded())
-                {
                     MyBillboardRenderer.m_fileTextures.Add(_material.Texture, fileTexure);
-                }
                 else
                 {
                     fileTexure.Touch(32767);
@@ -347,9 +343,7 @@ public static class Patch_MyBillboardRenderer
         static void AddToGroup(MyBillboard billboard)
         {
             if (billboard.Material != MyStringId.NullOrEmpty)
-            {
                 _renderGroups[(int)billboard.BlendType].Add(billboard);
-            }
         }
     }
 
@@ -393,7 +387,7 @@ public static class Patch_MyBillboardRenderer
                 int initialElementCount = Math.Max(_materials.Count, 512);
                 _cbvMaterials = MyManagers.Buffers.CreateConstantBuffer("Prism.Billboard.MaterialInfos", alignedStride * initialElementCount, usage: ResourceUsage.Dynamic, isGlobal: true);
             }
-            else if (_cbvMaterials.ByteSize < (alignedStride * _materials.Count))
+            else if (_cbvMaterials.ByteSize < alignedStride * _materials.Count)
             {
                 MyManagers.Buffers.Resize(_cbvMaterials, _materials.Count, newByteStride: alignedStride);
             }
@@ -410,7 +404,7 @@ public static class Patch_MyBillboardRenderer
     {
         checked
         {
-            return (unaligned + (alignment - 1)) & ~(alignment - 1);
+            return unaligned + (alignment - 1) & ~(alignment - 1);
         }
     }
 
@@ -429,15 +423,10 @@ public static class Patch_MyBillboardRenderer
         using (var mapping = _cbv.MapWriteDiscard(rc))
         {
             var matrices = MyRender11.Environment.Matrices;
-            ref var fog = ref MyCommon.FrameConstantsData.Fog;
             var frameData = new FrameConstants
             {
                 ViewMatrixAt0 = matrices.ViewAt0,
                 ProjMatrix = matrices.Projection,
-
-                FogColor = fog.Color,
-                FogDensity = fog.Density,
-                FogMultiplier = fog.Mult,
             };
             mapping.WriteAndPosition(ref frameData);
 
@@ -445,9 +434,7 @@ public static class Patch_MyBillboardRenderer
             for (int i = -1; i < NUM_RENDER_PASSES; i++)
             {
                 if (i == -1)
-                {
                     mapping.WriteAndPosition(ref matrices.ViewProjectionAt0);
-                }
                 else
                 {
                     if (MyRenderProxy.BillboardsViewProjectionRead.TryGetValue(i, out var data))

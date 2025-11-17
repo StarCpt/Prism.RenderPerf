@@ -5,7 +5,7 @@ using VRage.Render11.RenderContext;
 using VRage.Render11.Resources;
 using Buffer = SharpDX.Direct3D11.Buffer;
 
-namespace Prism.Vanilla.Billboard;
+namespace Prism.RenderPerf;
 
 public static class Extensions
 {
@@ -22,9 +22,7 @@ public static class Extensions
     public static void SetConstantBuffer(this MyAllShaderStages stage, int slot, IConstantBuffer constantBuffer, int offsetInBytes, int num16ByteConstants)
     {
         if (offsetInBytes % 256 != 0)
-        {
             throw new Exception("Constant buffer offset must be a multiple of 256 bytes.");
-        }
 
         Buffer[] cbvs = [constantBuffer.Buffer];
         int[] offsets = [offsetInBytes / 16];

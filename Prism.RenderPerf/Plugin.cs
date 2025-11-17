@@ -1,10 +1,10 @@
 ﻿using HarmonyLib;
-using Prism.Vanilla.Billboard.Patches;
+using Prism.RenderPerf.Patches;
 using System.Reflection;
 using VRage.Input;
 using VRage.Plugins;
 
-namespace Prism.Vanilla.Billboard;
+namespace Prism.RenderPerf;
 
 public class Plugin : IPlugin
 {
@@ -29,9 +29,7 @@ public class Plugin : IPlugin
     {
 #if DEBUG
         if (MyInput.Static.IsAnyShiftKeyPressed() && MyInput.Static.IsNewKeyPressed(MyKeys.OemPipe))
-        {
             Patch_MyBillboardRenderer.ReloadShaders();
-        }
 #endif
     }
 

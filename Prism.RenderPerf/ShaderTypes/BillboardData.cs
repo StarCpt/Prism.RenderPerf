@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using VRageMath.PackedVector;
 
-namespace Prism.Vanilla.Billboard.ShaderTypes;
+namespace Prism.RenderPerf.ShaderTypes;
 
 [StructLayout(LayoutKind.Explicit, Pack = 4)]
 struct BillboardDataUnion

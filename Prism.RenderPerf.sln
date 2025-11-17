@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36203.30 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prism.Vanilla.Billboard", "Prism.Vanilla.Billboard\Prism.Vanilla.Billboard.csproj", "{20DCAA1B-A26A-A9DA-E8ED-C2D7F7859309}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prism.RenderPerf", "Prism.RenderPerf\Prism.RenderPerf.csproj", "{20DCAA1B-A26A-A9DA-E8ED-C2D7F7859309}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prism.Maths", "Prism.Maths\Prism.Maths.csproj", "{3254897A-8344-ADD3-B3A9-04196AAA27B7}"
 EndProject

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Prism.Vanilla.Billboard;
+namespace Prism.RenderPerf;
 
 [Flags]
 enum BillboardType : int

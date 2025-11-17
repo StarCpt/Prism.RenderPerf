@@ -17,7 +17,7 @@
   
   <!-- Optional list of directories to take the cs files from. Use this if your repository has more than one project in it. (It is not needed for Tool Switcher) -->
   <SourceDirectories>
-    <Directory>Prism.Vanilla.Billboard</Directory>
+    <Directory>Prism.RenderPerf</Directory>
     <Directory>Prism.Maths</Directory>
     <Directory>Prism.Common</Directory>
   </SourceDirectories>
@@ -29,5 +29,5 @@
   </NuGetReferences>
 
   <!-- To specify asset files to be copied onto disk, use the AssetFolder tag. -->
-  <AssetFolder>Prism.Vanilla.Billboard/Shaders</AssetFolder>
+  <AssetFolder>Prism.RenderPerf/Shaders</AssetFolder>
 </PluginData>

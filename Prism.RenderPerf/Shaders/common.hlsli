@@ -92,14 +92,6 @@ cbuffer FrameConstants : register(b1)
     float4x4 ViewMatrix;
     float4x4 ProjMatrix;
     
-    float3 FogColor;
-    float FogDensity;
-    
-    float FogMultiplier;
-    uint _pad1;
-    uint _pad2;
-    uint _pad3;
-    
     float4x4 ViewProjections[33];
 };
 
@@ -134,36 +126,3 @@ cbuffer MaterialConstants : register(b2)
 #define BLEND_POSTPP 4
 
 #define FLOAT_EPSILON 1E-6
-
-float3 Fog(float3 color, float dist)
-{
-    dist = clamp(dist, 0, 1000);
-    float fog0 = FogMultiplier * (1 - exp(-dist * FogDensity));
-    return lerp(color, FogColor, fog0);
-}
-
-void WeightedOITCendos(float4 color, float linearZ, out float4 accumTarget, out float4 coverageTarget)
-{
-    // clip colors below very low transparency
-    clip(color.a - 0.0001f);
-    
-    // apply fog
-    if (color.a > 0.001f)
-        color.rgb = Fog(color.rgb / color.a, -linearZ) * color.a;
-
-    // Insert your favorite weighting function here. The color-based factor
-    // avoids color pollution from the edges of wispy clouds. The z-based
-    // factor gives precedence to nearer surfaces.
-    //float invZ = max(0.005, 1 / max(-linearZ, 1.0f) );// *color.a;// clamp(1 + linearZ / 200, 0.01, 1);
-    //float invZ = clamp(1 + linearZ / 200, 0.01, 1);
-    float invZ = (1 + (linearZ + 3) / 200) * color.a;
-    invZ = pow(abs(invZ), 32);
-    invZ = clamp(invZ, 0.01, 1);
-    float weight = invZ;
-    // Blend Func: ONE, ONE
-    // Switch to premultiplied alpha and weight
-    accumTarget = color * weight;
-
-    // Blend Func: zero, 1-source
-    coverageTarget = color.a;
-}

@@ -2,6 +2,7 @@
 #include <Math/Math.hlsli>
 #include <Shadows/Csm.hlsli>
 #include <Lighting/EnvAmbient.hlsli>
+#include <Transparent/OIT/Globals.hlsli>
 
 #if defined(SINGLE_CHANNEL)
 Texture2D<float> billboardTex : register(t0);
@@ -212,7 +213,7 @@ float4 ps(VS_Output input) : SV_Target0
     
 #if defined(OIT)
     float linearDepth = linearize_depth(input.Position.z, frame_.Environment.projection_matrix);
-    WeightedOITCendos(color, linearDepth, color, coverageTarget);
+    WeightedOITCendos(color, linearDepth, input.Position.z, 1, color, coverageTarget);
 #endif
     
     return color;
