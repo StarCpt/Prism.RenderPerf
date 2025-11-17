@@ -1,5 +1,5 @@
 ﻿using HarmonyLib;
-using Prism.RenderPerf.Patches;
+using Prism.RenderPerf.Billboards;
 using System.Reflection;
 using VRage.Input;
 using VRage.Plugins;
@@ -17,7 +17,7 @@ public class Plugin : IPlugin
 
     public void Init(object gameInstance)
     {
-        Patch_MyBillboardRenderer.Init();
+        BillboardRenderer.Init();
     }
 
     public void LoadAssets(string path)
@@ -29,7 +29,7 @@ public class Plugin : IPlugin
     {
 #if DEBUG
         if (MyInput.Static.IsAnyShiftKeyPressed() && MyInput.Static.IsNewKeyPressed(MyKeys.OemPipe))
-            Patch_MyBillboardRenderer.ReloadShaders();
+            BillboardRenderer.ReloadShaders();
 #endif
     }
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <PluginData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="GitHubPlugin">
   <!-- Place your github repository name here. One repository can only store one plugin. This one is from https://github.com/austinvaness/ToolSwitcherPlugin -->
-  <Id>StarCpt/SE-Prism.RenderPerf</Id>
+  <Id>StarCpt/Prism.RenderPerf</Id>
   
   <!-- The name of your plugin that will appear in the list. -->
   <FriendlyName>RenderPerf</FriendlyName>
@@ -10,7 +10,7 @@
   <Author>StarCpt</Author>
   
   <!-- Optional tag that adds a tooltip to the plugin in-game. -->
-  <Tooltip>Better Rendering Performance.</Tooltip>
+  <Tooltip>Better Rendering Performance</Tooltip>
 
   <!-- Optional tag that adds a plugin description. If omitted, this will be the same as the Tooltip. 1000 characters max. -->
   <Description>Replaces parts of the rendering engine to improve rendering performance. (add more text here)</Description>

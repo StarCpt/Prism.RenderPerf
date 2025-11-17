@@ -13,7 +13,7 @@ using VRageMath;
 using VRageMath.PackedVector;
 using VRageRender;
 
-namespace Prism.RenderPerf;
+namespace Prism.RenderPerf.Billboards;
 
 class BillboardRenderGroup : IDisposable
 {
@@ -257,7 +257,7 @@ class BillboardRenderGroup : IDisposable
             return;
 
         if (InstanceBuffer is null)
-            InstanceBuffer = MyManagers.Buffers.CreateVertexBuffer($"Prism.Billboard.InstanceBuffer{(int)BlendType}", TotalBillboardCount, sizeof(BillboardDataUnion), usage: ResourceUsage.Dynamic, isGlobal: true);
+            InstanceBuffer = MyManagers.Buffers.CreateVertexBuffer($"Prism.RenderPerf.Billboards.InstanceBuffer{(int)BlendType}", TotalBillboardCount, sizeof(BillboardDataUnion), usage: ResourceUsage.Dynamic, isGlobal: true);
         else if (InstanceBuffer.ElementCount < TotalBillboardCount)
         {
             MyManagers.Buffers.Resize(InstanceBuffer, TotalBillboardCount);

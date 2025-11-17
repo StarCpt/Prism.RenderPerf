@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Prism.RenderPerf;
+namespace Prism.RenderPerf.Billboards;
 
 [Flags]
 public enum BillboardFlags : int
