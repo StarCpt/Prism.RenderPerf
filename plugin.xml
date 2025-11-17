@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<PluginData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="GitHubPlugin">
+  <!-- Place your github repository name here. One repository can only store one plugin. This one is from https://github.com/austinvaness/ToolSwitcherPlugin -->
+  <Id>StarCpt/SE-Prism.RenderPerf</Id>
+  
+  <!-- The name of your plugin that will appear in the list. -->
+  <FriendlyName>RenderPerf</FriendlyName>
+  
+  <!-- The author name that you want to appear in the list. -->
+  <Author>StarCpt</Author>
+  
+  <!-- Optional tag that adds a tooltip to the plugin in-game. -->
+  <Tooltip>Better Rendering Performance.</Tooltip>
+
+  <!-- Optional tag that adds a plugin description. If omitted, this will be the same as the Tooltip. 1000 characters max. -->
+  <Description>Replaces parts of the rendering engine to improve rendering performance. (add more text here)</Description>
+  
+  <!-- Optional list of directories to take the cs files from. Use this if your repository has more than one project in it. (It is not needed for Tool Switcher) -->
+  <SourceDirectories>
+    <Directory>Prism.Vanilla.Billboard</Directory>
+    <Directory>Prism.Maths</Directory>
+    <Directory>Prism.Common</Directory>
+  </SourceDirectories>
+  
+  <!-- To specify a required NuGet package, use either a list of PackageReference tags OR a Config tag. -->
+  <NuGetReferences>
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+  </NuGetReferences>
+
+  <!-- To specify asset files to be copied onto disk, use the AssetFolder tag. -->
+  <AssetFolder>Prism.Vanilla.Billboard/Shaders</AssetFolder>
+</PluginData>

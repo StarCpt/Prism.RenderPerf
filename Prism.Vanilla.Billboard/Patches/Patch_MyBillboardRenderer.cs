@@ -162,8 +162,6 @@ public static class Patch_MyBillboardRenderer
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
-    static bool _reloadShaders = false;
-
     public static unsafe void Init()
     {
         for (int i = 0; i < _renderGroups.Length; i++)
@@ -204,7 +202,7 @@ public static class Patch_MyBillboardRenderer
         foreach (var ps in _pixelShaders)
             ps?.Dispose();
 
-        var compiler = new FileShaderCompiler(@"C:\Users\lurkingstar\source\repos\SE-PrismEngine\Prism.Vanilla.Billboard\Shaders", Path.Combine(MyFileSystem.ShadersBasePath, "Shaders"));
+        var compiler = new FileShaderCompiler(Plugin.ShaderDirectory, Path.Combine(MyFileSystem.ShadersBasePath, "Shaders"));
         _vsQuad  = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_quad");
         _vsTri   = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_tri");
         _vsPoint = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_point");
@@ -320,12 +318,6 @@ public static class Patch_MyBillboardRenderer
     [HarmonyPrefix]
     public static bool Gather_Prefix(MyRenderContext rc, bool immediateContext)
     {
-        if (_reloadShaders)
-        {
-            ReloadShadersInternal();
-            _reloadShaders = false;
-        }
-
         foreach (var group in _renderGroups)
         {
             group.Clear();
@@ -651,6 +643,6 @@ public static class Patch_MyBillboardRenderer
 
     public static void ReloadShaders()
     {
-        _reloadShaders = true;
+        MyRender11.EnqueueUpdate(ReloadShadersInternal);
     }
 }
