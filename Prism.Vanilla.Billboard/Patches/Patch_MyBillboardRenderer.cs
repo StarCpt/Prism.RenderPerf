@@ -294,6 +294,13 @@ public static class Patch_MyBillboardRenderer
         });
     }
 
+    [HarmonyPatch(nameof(MyBillboardRenderer.OnSessionEnd))]
+    [HarmonyPostfix]
+    static void OnSessionEnd_Postfix()
+    {
+        _materials.Clear();
+    }
+
     [HarmonyPatch(nameof(MyBillboardRenderer.Gather))]
     [HarmonyPrefix]
     public static bool Gather_Prefix(MyRenderContext rc, bool immediateContext)
