@@ -77,6 +77,7 @@ float3 GetVertexLight(const float3 pos)
 void vs_quad(uint vertexId : SV_VertexID, VS_INPUT_QUAD input, out VS_Output result)
 {
     result.Position = mul(ViewProjections[input.ViewProjId], float4(input.Vertices[vertexId].xyz, 1));
+    result.WorldPos = input.Vertices[vertexId].xyz;
     result.UV = input.UVOffset + (UVTable[vertexId] * input.UVSize);
     
     float2 matUVStart = Material.UnpackUVOffset();
@@ -101,6 +102,7 @@ void vs_quad(uint vertexId : SV_VertexID, VS_INPUT_QUAD input, out VS_Output res
 void vs_tri(uint vertexId : SV_VertexID, VS_INPUT_TRI input, out VS_Output result)
 {
     result.Position = mul(ViewProjections[input.ViewProjId], float4(input.Vertices[vertexId].xyz, 1));
+    result.WorldPos = input.Vertices[vertexId].xyz;
     result.UV = input.Texcoords[vertexId];
     
     float2 matUVStart = Material.UnpackUVOffset();
@@ -123,6 +125,7 @@ void vs_point(uint vertexId : SV_VertexID, VS_INPUT_POINT input, out VS_Output r
 {
     float3 worldPos = GetPointQuadVertex(vertexId, input.Position, input.Radius, input.Angle);
     result.Position = mul(ViewProjections[input.ViewProjId], float4(worldPos, 1));
+    result.WorldPos = worldPos;
     result.UV = input.UVOffset + (UVTable[vertexId] * input.UVSize);
     
     float2 matUVStart = Material.UnpackUVOffset();
@@ -148,6 +151,7 @@ void vs_line(uint vertexId : SV_VertexID, VS_INPUT_LINE input, out VS_Output res
 {
     float3 worldPos = GetLineQuadVertex(vertexId, input.Origin, input.Direction, input.Length, input.Thickness);
     result.Position = mul(ViewProjections[input.ViewProjId], float4(worldPos, 1));
+    result.WorldPos = worldPos;
     result.UV = input.UVOffset + (UVTable[vertexId] * input.UVSize);
     
     float2 matUVStart = Material.UnpackUVOffset();
