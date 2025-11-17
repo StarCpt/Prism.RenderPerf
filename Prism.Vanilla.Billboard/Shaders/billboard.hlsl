@@ -48,8 +48,21 @@ float3 GetPointQuadVertex(const uint vertexId, const float3 pos, const float rad
     const float3 right = cosAngle * result2 + sinAngle * normalizedResult;
     const float3 up = sinAngle * result2 + cosAngle * normalizedResult;
     
-    const float2 multiplier = UVTable[vertexId] ? -1 : 1;
+    // 0,1 -> 1,-1
+    const float2 multiplier = -mad(UVTable[vertexId], 2, -1);
     return pos + (right * multiplier.x) + (up * multiplier.y);
+}
+
+float3 GetLineQuadVertex(const uint vertexId, const float3 pos, const float3 dir, const float len, const float thickness)
+{
+    float3 right = normalize(cross(dir, -pos)) * thickness;
+    return pos + (dir * len * UVTable[vertexId].x) + (right * mad(UVTable[vertexId].y, 2, -1));
+}
+
+float GetLineColorMulti(const float3 pos, const float3 dir)
+{
+    // weird function
+    return (1 - pow(abs(dot(normalize(pos), dir)), 30)) * 0.5;
 }
 
 void vs_quad(uint vertexId : SV_VertexID, VS_INPUT_QUAD input, out VS_Output result)
@@ -91,6 +104,22 @@ void vs_point(uint vertexId : SV_VertexID, VS_INPUT_POINT input, out VS_Output r
     result.UV = lerp(matUVStart, matUVEnd, result.UV);
     
     result.Color = input.Color;
+    result.AlphaCutout = input.AlphaCutout;
+    result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
+}
+
+void vs_line(uint vertexId : SV_VertexID, VS_INPUT_LINE input, out VS_Output result)
+{
+    float3 worldPos = GetLineQuadVertex(vertexId, input.Origin, input.Direction, input.Length, input.Thickness);
+    result.Position = mul(ViewProjections[input.ViewProjId], float4(worldPos, 1));
+    result.UV = input.UVOffset + (UVTable[vertexId] * input.UVSize);
+    
+    float2 matUVStart = Material.UnpackUVOffset();
+    float2 matUVEnd = matUVStart + Material.UnpackUVSize();
+    result.UV = lerp(matUVStart, matUVEnd, result.UV);
+    
+    result.Color = input.Color;
+    result.Color.xyz *= GetLineColorMulti(input.Origin, input.Direction);
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
 }

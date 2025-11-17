@@ -146,12 +146,14 @@ public static class Patch_MyBillboardRenderer
     static VertexShader _vsQuad;
     static VertexShader _vsTri;
     static VertexShader _vsPoint;
+    static VertexShader _vsLine;
     // render passes
     // flags
     static PixelShader[,] _pixelShaders = new PixelShader[NUM_RENDER_PASSES, (int)BillboardFlags.MAX_NUM];
     static InputLayout _ilQuad;
     static InputLayout _ilTri;
     static InputLayout _ilPoint;
+    static InputLayout _ilLine;
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
@@ -184,10 +186,12 @@ public static class Patch_MyBillboardRenderer
         _ilQuad?.Dispose();
         _ilTri?.Dispose();
         _ilPoint?.Dispose();
+        _ilLine?.Dispose();
 
         _vsQuad?.Dispose();
         _vsTri?.Dispose();
         _vsPoint?.Dispose();
+        _vsLine?.Dispose();
 
         foreach (var ps in _pixelShaders)
             ps?.Dispose();
@@ -196,6 +200,7 @@ public static class Patch_MyBillboardRenderer
         _vsQuad  = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_quad");
         _vsTri   = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_tri");
         _vsPoint = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_point");
+        _vsLine  = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_line");
 
         var defines = new List<ShaderMacro>();
         for (int pass = 0; pass < NUM_RENDER_PASSES; pass++)
@@ -267,6 +272,23 @@ public static class Patch_MyBillboardRenderer
             new InputElement("ALPHACUTOUT",           0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("SOFTPARTICLEDISTSCALE", 0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
             
+            new InputElement("UVOFFSET",              0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("UVSIZE",                0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("COLOR",                 0, Format.R16G16B16A16_Float, -1, 0, InputClassification.PerInstanceData, 1),
+        });
+
+        _ilLine = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode(MyRender11.DeviceInstance, "billboard.hlsl", "vs_line"), new InputElement[]
+        {
+            new InputElement("POSITION",              0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("LENGTH",                0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("DIRECTION",             0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("THICKNESS",             0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
+
+            new InputElement("VIEWPROJ",              0, Format.R32_UInt,           -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("REFLECTIVITY",          0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("ALPHACUTOUT",           0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
+            new InputElement("SOFTPARTICLEDISTSCALE", 0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
+
             new InputElement("UVOFFSET",              0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("UVSIZE",                0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("COLOR",                 0, Format.R16G16B16A16_Float, -1, 0, InputClassification.PerInstanceData, 1),
@@ -565,6 +587,14 @@ public static class Patch_MyBillboardRenderer
                     rc.VertexShader.Set(_vsPoint);
                     rc.DrawIndexedInstanced(6, batch.Points.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Points.Count;
+                }
+
+                if (batch.Lines.Count > 0)
+                {
+                    rc.SetInputLayout(_ilLine);
+                    rc.VertexShader.Set(_vsLine);
+                    rc.DrawIndexedInstanced(6, batch.Lines.Count, 0, 0, instanceOffset);
+                    instanceOffset += batch.Lines.Count;
                 }
             }
             else

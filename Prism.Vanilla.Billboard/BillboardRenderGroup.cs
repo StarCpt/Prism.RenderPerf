@@ -19,16 +19,18 @@ class BillboardRenderGroup : IDisposable
 {
     public class Batch
     {
-        public int BillboardCount => Quads.Count + Triangles.Count + Points.Count;
+        public int BillboardCount => Quads.Count + Triangles.Count + Points.Count + Lines.Count;
         public readonly List<BillboardDataUnion> Quads = [];
         public readonly List<BillboardDataUnion> Triangles = [];
         public readonly List<BillboardDataUnion> Points = [];
+        public readonly List<BillboardDataUnion> Lines = [];
 
         public void Clear()
         {
             Quads.Clear();
             Triangles.Clear();
             Points.Clear();
+            Lines.Clear();
         }
     }
 
@@ -55,7 +57,7 @@ class BillboardRenderGroup : IDisposable
                 Vector3D v1 = billboard.Position1;
                 Vector3D v2 = billboard.Position2;
 
-                if (TryGetParentMatrix(billboard, out MatrixD mat))
+                if (billboard.ParentID != uint.MaxValue && TryGetParentMatrix(billboard, out MatrixD mat))
                 {
                     Vector3D.Transform(ref v0, ref mat, out v0);
                     Vector3D.Transform(ref v1, ref mat, out v1);
@@ -72,7 +74,7 @@ class BillboardRenderGroup : IDisposable
                 Vector3D v2 = billboard.Position2;
                 Vector3D v3 = billboard.Position3;
 
-                if (TryGetParentMatrix(billboard, out MatrixD mat))
+                if (billboard.ParentID != uint.MaxValue && TryGetParentMatrix(billboard, out MatrixD mat))
                 {
                     Vector3D.Transform(ref v0, ref mat, out v0);
                     Vector3D.Transform(ref v1, ref mat, out v1);
@@ -86,48 +88,53 @@ class BillboardRenderGroup : IDisposable
         }
         else if (billboard.LocalType is MyBillboard.LocalTypeEnum.Line)
         {
-            Vector3D v0 = billboard.Position0;
-            Vector3D v1 = billboard.Position1;
-            Vector3D v2 = billboard.Position2;
-            Vector3D v3 = billboard.Position3;
+            float length = (float)billboard.Position2.X;
+            float thickness = (float)billboard.Position2.Y;
 
-            if (TryGetParentMatrix(billboard, out MatrixD mat))
-            {
-                Vector3D.Transform(ref v0, ref mat, out v0);
-                Vector3D.TransformNormal(ref v1, ref mat, out v1);
-            }
-
-            MyPolyLineD polyLine = new()
-            {
-                LineDirectionNormalized = v1,
-                Point0 = v0,
-                Point1 = v0 + v1 * v2.X,
-                Thickness = (float)v2.Y,
-            };
-
-            Vector3D cameraPos = MyRender11.Environment.Matrices.CameraPosition;
-            Vector3D cameraPosForProj = (billboard.CustomViewProjection == -1) ? cameraPos : MyRenderProxy.BillboardsViewProjectionRead[billboard.CustomViewProjection].CameraPosition;
-            if (Vector3D.IsZero(cameraPosForProj - polyLine.Point0, 1E-06))
-            {
+            if (length == 0 || thickness == 0)
                 return;
+
+            Vector3D origin = billboard.Position0;
+            Vector3 direction = billboard.Position1;
+
+            if (billboard.ParentID != uint.MaxValue && TryGetParentMatrix(billboard, out MatrixD mat))
+            {
+                Vector3D.Transform(ref origin, ref mat, out origin);
+                Vector3.TransformNormal(ref direction, ref mat, out direction);
             }
 
-            float num = 1f - Math.Abs(Vector3.Dot(MyUtils.Normalize(cameraPos - v0), v1));
-            float rgbMulti = (1f - (float)Math.Pow(1f - num, 30.0)) * 0.5f;
+            Vector3D cameraPosForProj = (billboard.CustomViewProjection == -1) ? MyRender11.Environment.Matrices.CameraPosition : MyRenderProxy.BillboardsViewProjectionRead[billboard.CustomViewProjection].CameraPosition;
+            Vector3D.Subtract(ref origin, ref cameraPosForProj, out origin);
+                
+            batch.Lines.Add(new BillboardDataUnion
+            {
+                Line = new LineBillboardData
+                {
+                    Origin = (float3)origin,
+                    Length = length,
+                    Direction = direction,
+                    Thickness = thickness,
 
-            MyUtils.GetPolyLineQuad(out var retQuad, ref polyLine, cameraPosForProj);
-            v0 = retQuad.Point0;
-            v1 = retQuad.Point1;
-            v2 = retQuad.Point2;
-            v3 = retQuad.Point3;
+                    UVOffset = new HalfVector2(billboard.UVOffset),
+                    UVSize = new HalfVector2(billboard.UVSize),
+                    Color = new HalfVector4(
+                        billboard.Color.X * billboard.ColorIntensity,
+                        billboard.Color.Y * billboard.ColorIntensity,
+                        billboard.Color.Z * billboard.ColorIntensity,
+                        billboard.Color.W),
 
-            AddQuad(ref v0, ref v1, ref v2, ref v3, rgbMulti);
+                    CustomViewProjection = (uint)(billboard.CustomViewProjection + 1),
+                    Reflectivity = billboard.Reflectivity,
+                    AlphaCutout = billboard.AlphaCutout,
+                    SoftParticleDistanceScale = billboard.SoftParticleDistanceScale,
+                },
+            });
             TotalBillboardCount++;
         }
         else if (billboard.LocalType is MyBillboard.LocalTypeEnum.Point)
         {
             Vector3D pos = billboard.Position0;
-            if (TryGetParentMatrix(billboard, out MatrixD mat))
+            if (billboard.ParentID != uint.MaxValue && TryGetParentMatrix(billboard, out MatrixD mat))
             {
                 Vector3D.Transform(ref pos, ref mat, out pos);
             }
@@ -266,6 +273,7 @@ class BillboardRenderGroup : IDisposable
             mapping.WriteAndPosition(batch.Value.Quads.AsSpan());
             mapping.WriteAndPosition(batch.Value.Triangles.AsSpan());
             mapping.WriteAndPosition(batch.Value.Points.AsSpan());
+            mapping.WriteAndPosition(batch.Value.Lines.AsSpan());
         }
     }
 

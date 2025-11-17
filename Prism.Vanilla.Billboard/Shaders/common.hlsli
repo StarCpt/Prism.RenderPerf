@@ -51,6 +51,23 @@ struct VS_INPUT_POINT
     float4 Color : COLOR;
 };
 
+struct VS_INPUT_LINE
+{
+    float3 Origin : POSITION;
+    float Length : LENGTH;
+    float3 Direction : DIRECTION;
+    float Thickness : THICKNESS;
+    
+    uint ViewProjId : VIEWPROJ;
+    float Reflectivity : REFLECTIVITY;
+    float AlphaCutout : ALPHACUTOUT;
+    float SoftParticleDistanceScale : SOFTPARTICLEDISTSCALE;
+    
+    float2 UVOffset : UVOFFSET;
+    float2 UVSize : UVSIZE;
+    float4 Color : COLOR;
+};
+
 struct VS_Output
 {
     float4 Position : SV_Position;

@@ -15,6 +15,9 @@ struct BillboardDataUnion
 
     [FieldOffset(0)]
     public PointBillboardData Point;
+
+    [FieldOffset(0)]
+    public LineBillboardData Line;
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -62,6 +65,24 @@ struct PointBillboardData
 {
     public float3 Position;
     public HalfVector2 RadiusAndAngle;
+
+    public uint CustomViewProjection;
+    public float Reflectivity;
+    public float AlphaCutout;
+    public float SoftParticleDistanceScale;
+
+    public HalfVector2 UVOffset;
+    public HalfVector2 UVSize;
+    public HalfVector4 Color;
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
+struct LineBillboardData
+{
+    public float3 Origin;
+    public float Length;
+    public float3 Direction;
+    public float Thickness;
 
     public uint CustomViewProjection;
     public float Reflectivity;
