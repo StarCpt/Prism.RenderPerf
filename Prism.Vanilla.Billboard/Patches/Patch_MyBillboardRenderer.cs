@@ -39,6 +39,7 @@ class Material
 {
     public ITexture? Texture { get; private set; }
     public BillboardFlags Flags { get; private set; } = BillboardFlags.None;
+    public bool Lit => _material.CanBeAffectedByOtherLights;
     public readonly MaterialInfo Info;
     public readonly int MaterialInfoIndex;
 
@@ -126,6 +127,7 @@ class Material
         Flags = BillboardFlags.None;
         Flags |= _material.AlphaCutout ? BillboardFlags.AlphaCutout : BillboardFlags.None;
         Flags |= (Texture?.Format ?? Format.Unknown) is Format.BC4_UNorm ? BillboardFlags.SingleChannel : BillboardFlags.None;
+        Flags |= _material.CanBeAffectedByOtherLights ? BillboardFlags.LitParticle : BillboardFlags.None;
     }
 }
 
@@ -223,6 +225,8 @@ public static class Patch_MyBillboardRenderer
                     defines.Add(new ShaderMacro("OIT", null));
                 if ((flag & BillboardFlags.SoftParticle) != 0)
                     defines.Add(new ShaderMacro("SOFT_PARTICLE", null));
+                if ((flag & BillboardFlags.LitParticle) != 0)
+                    defines.Add(new ShaderMacro("LIT_PARTICLE", null));
 
                 _pixelShaders[pass, (int)flag] = compiler.CompilePixel(MyRender11.DeviceInstance, "billboard.hlsl", "ps", defines.ToArray());
                 defines.Clear();
@@ -582,7 +586,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Quads.Count > 0)
                 {
                     rc.SetInputLayout(_ilQuad);
-                    rc.VertexShader.Set(lit ? _vsQuadLit : _vsQuad);
+                    rc.VertexShader.Set(lit && material.Lit ? _vsQuadLit : _vsQuad);
                     rc.DrawIndexedInstanced(6, batch.Quads.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Quads.Count;
                 }
@@ -590,7 +594,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Triangles.Count > 0)
                 {
                     rc.SetInputLayout(_ilTri);
-                    rc.VertexShader.Set(lit ? _vsTriLit : _vsTri);
+                    rc.VertexShader.Set(lit && material.Lit ? _vsTriLit : _vsTri);
                     rc.DrawIndexedInstanced(3, batch.Triangles.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Triangles.Count;
                 }
@@ -598,7 +602,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Points.Count > 0)
                 {
                     rc.SetInputLayout(_ilPoint);
-                    rc.VertexShader.Set(lit ? _vsPointLit : _vsPoint);
+                    rc.VertexShader.Set(lit && material.Lit ? _vsPointLit : _vsPoint);
                     rc.DrawIndexedInstanced(6, batch.Points.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Points.Count;
                 }
@@ -606,7 +610,7 @@ public static class Patch_MyBillboardRenderer
                 if (batch.Lines.Count > 0)
                 {
                     rc.SetInputLayout(_ilLine);
-                    rc.VertexShader.Set(lit ? _vsLineLit : _vsLine);
+                    rc.VertexShader.Set(lit && material.Lit ? _vsLineLit : _vsLine);
                     rc.DrawIndexedInstanced(6, batch.Lines.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Lines.Count;
                 }
