@@ -1,4 +1,5 @@
 #include "common.hlsli"
+#include <Math/Math.hlsli>
 
 SamplerState LinearSampler : register(s2);
 
@@ -7,6 +8,8 @@ Texture2D<float> billboardTex : register(t1);
 #else
 Texture2D<float4> billboardTex : register(t1);
 #endif
+
+Texture2D<float> DepthTexture : register(t2);
 
 static const float2 UVTable[4] =
 {
@@ -60,7 +63,7 @@ void vs_quad(uint vertexId : SV_VertexID, VS_INPUT_QUAD input, out VS_Output res
     
     result.Color = input.Color;
     result.AlphaCutout = input.AlphaCutout;
-    result.SoftParticleDistanceScale = input.SoftParticleDistanceScale;
+    result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
 }
 
 void vs_tri(uint vertexId : SV_VertexID, VS_INPUT_TRI input, out VS_Output result)
@@ -74,7 +77,7 @@ void vs_tri(uint vertexId : SV_VertexID, VS_INPUT_TRI input, out VS_Output resul
     
     result.Color = input.Color;
     result.AlphaCutout = input.AlphaCutout;
-    result.SoftParticleDistanceScale = input.SoftParticleDistanceScale;
+    result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
 }
 
 void vs_point(uint vertexId : SV_VertexID, VS_INPUT_POINT input, out VS_Output result)
@@ -89,7 +92,7 @@ void vs_point(uint vertexId : SV_VertexID, VS_INPUT_POINT input, out VS_Output r
     
     result.Color = input.Color;
     result.AlphaCutout = input.AlphaCutout;
-    result.SoftParticleDistanceScale = input.SoftParticleDistanceScale;
+    result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
 }
 
 #if defined(OIT)
@@ -104,6 +107,13 @@ float4 ps(VS_Output input) : SV_Target0
 #if defined(ALPHA_CUTOUT)
     float cutout = step(input.AlphaCutout, color.w);
     color = float4(color.xyz * cutout, cutout);
+#endif
+    
+#if defined(SOFT_PARTICLE)
+    float linearSceneDepth = linearize_depth(DepthTexture[input.Position.xy], ProjMatrix);
+    float linearParticleDepth = linearize_depth(input.Position.z, ProjMatrix);
+    float softParticleFade = CalcSoftParticle(input.SoftParticleDistanceScale, -linearSceneDepth, -linearParticleDepth);
+    color *= softParticleFade;
 #endif
     
 #if defined(OIT)

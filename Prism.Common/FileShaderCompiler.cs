@@ -14,10 +14,12 @@ namespace Prism.Common
             public IDisposable Shadow { get; set; }
 
             private readonly string _compileFilePath;
+            private readonly string _baseSystemIncludePath;
 
-            public FileIncludeHandler(string compileFilePath)
+            public FileIncludeHandler(string compileFilePath, string baseSystemIncludePath)
             {
                 _compileFilePath = Path.GetDirectoryName(compileFilePath);
+                _baseSystemIncludePath = baseSystemIncludePath;
             }
 
             public void Close(Stream stream)
@@ -27,25 +29,31 @@ namespace Prism.Common
 
             public Stream Open(IncludeType type, string fileName, Stream parentStream)
             {
-                if (type != IncludeType.Local)
-                {
-                    throw new ArgumentException($"Unsupported {nameof(type)} argument: {type}, must be {IncludeType.Local}.");
-                }
-
                 if (fileName == null)
                 {
                     throw new ArgumentNullException(nameof(fileName));
                 }
 
                 string includeFilePath;
-                if (parentStream is FileStream fs)
+                if (type is IncludeType.Local)
                 {
-                    string parentFilePath = Path.GetDirectoryName(fs.Name);
-                    includeFilePath = Path.Combine(parentFilePath, fileName);
+                    if (parentStream is FileStream fs)
+                    {
+                        string parentFilePath = Path.GetDirectoryName(fs.Name);
+                        includeFilePath = Path.Combine(parentFilePath, fileName);
+                    }
+                    else
+                    {
+                        includeFilePath = Path.Combine(_compileFilePath, fileName);
+                    }
+                }
+                else if (type is IncludeType.System)
+                {
+                    includeFilePath = Path.Combine(_baseSystemIncludePath, fileName);
                 }
                 else
                 {
-                    includeFilePath = Path.Combine(_compileFilePath, fileName);
+                    throw new ArgumentException($"Invalid {nameof(IncludeType)}.");
                 }
 
                 return File.OpenRead(includeFilePath);
@@ -58,10 +66,12 @@ namespace Prism.Common
         }
 
         private readonly string _baseShaderPath;
+        private readonly string _gameShaderBasePath;
 
-        public FileShaderCompiler(string baseShaderPath)
+        public FileShaderCompiler(string baseShaderPath, string gameShaderBasePath)
         {
             _baseShaderPath = baseShaderPath;
+            _gameShaderBasePath = gameShaderBasePath;
         }
 
         public PixelShader CompilePixel(Device device, string id, string entryPoint, params ShaderMacro[] defines)
@@ -77,7 +87,7 @@ namespace Prism.Common
                     ShaderFlags.OptimizationLevel3,
                     EffectFlags.None,
                     defines,
-                    new FileIncludeHandler(filePath));
+                    new FileIncludeHandler(filePath, _gameShaderBasePath));
                 return new PixelShader(device, compilation);
             }
         }
@@ -95,7 +105,7 @@ namespace Prism.Common
                     ShaderFlags.OptimizationLevel3,
                     EffectFlags.None,
                     defines,
-                    new FileIncludeHandler(filePath));
+                    new FileIncludeHandler(filePath, _gameShaderBasePath));
                 return new VertexShader(device, compilation);
             }
         }
@@ -113,7 +123,7 @@ namespace Prism.Common
                     ShaderFlags.OptimizationLevel3,
                     EffectFlags.None,
                     defines,
-                    new FileIncludeHandler(filePath));
+                    new FileIncludeHandler(filePath, _gameShaderBasePath));
             }
         }
 
@@ -130,7 +140,7 @@ namespace Prism.Common
                     ShaderFlags.OptimizationLevel3,
                     EffectFlags.None,
                     defines,
-                    new FileIncludeHandler(filePath));
+                    new FileIncludeHandler(filePath, _gameShaderBasePath));
                 return new ComputeShader(device, compilation);
             }
         }

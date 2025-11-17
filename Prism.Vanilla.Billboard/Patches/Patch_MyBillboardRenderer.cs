@@ -7,7 +7,9 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using VRage.FileSystem;
 using VRage.Render11.Common;
 using VRage.Render11.RenderContext;
 using VRage.Render11.Resources;
@@ -24,12 +26,18 @@ struct MaterialInfo
 {
     public HalfVector2 UVOffset; // 4 bytes
     public HalfVector2 UVSize;   // 8 bytes
+
+    public float AlphaSaturation; // 12 bytes
+    public float SoftParticleDistanceScale; // 16 bytes
+
+    // only UV Offset/Size, AlphaCutout, AlphaSaturation, CanBeAffectedByOtherLights, and SoftParticleDistanceScale are used
+    // UseAtlas, Texture, TextureType, Id, TargetSize are used for getting the texture
 }
 
 class Material
 {
     public ITexture? Texture { get; private set; }
-    public bool EnableAlphaCutout => _material.AlphaCutout;
+    public BillboardFlags Flags { get; private set; } = BillboardFlags.None;
     public readonly MaterialInfo Info;
     public readonly int MaterialInfoIndex;
 
@@ -47,6 +55,8 @@ class Material
             {
                 UVOffset = new HalfVector2(atlasOffset + (_material.UVOffset * atlasScale)),
                 UVSize = new HalfVector2(_material.UVSize * atlasScale),
+                AlphaSaturation = _material.AlphaSaturation,
+                SoftParticleDistanceScale = _material.SoftParticleDistanceScale,
             };
         }
         else
@@ -55,9 +65,12 @@ class Material
             {
                 UVOffset = new HalfVector2(_material.UVOffset),
                 UVSize = new HalfVector2(_material.UVSize),
+                AlphaSaturation = _material.AlphaSaturation,
+                SoftParticleDistanceScale = _material.SoftParticleDistanceScale,
             };
         }
         MaterialInfoIndex = materialInfoIndex;
+        UpdateBillboardFlags();
     }
 
     public void UpdateTexture()
@@ -102,6 +115,14 @@ class Material
         {
             throw new Exception("Invalid texture type.");
         }
+        UpdateBillboardFlags();
+    }
+
+    private void UpdateBillboardFlags()
+    {
+        Flags = BillboardFlags.None;
+        Flags |= _material.AlphaCutout ? BillboardFlags.AlphaCutout : BillboardFlags.None;
+        Flags |= (Texture?.Format ?? Format.Unknown) is Format.BC4_UNorm ? BillboardFlags.SingleChannel : BillboardFlags.None;
     }
 }
 
@@ -171,7 +192,7 @@ public static class Patch_MyBillboardRenderer
         foreach (var ps in _pixelShaders)
             ps?.Dispose();
 
-        var compiler = new FileShaderCompiler(@"C:\Users\lurkingstar\source\repos\SE-PrismEngine\Prism.Vanilla.Billboard\Shaders");
+        var compiler = new FileShaderCompiler(@"C:\Users\lurkingstar\source\repos\SE-PrismEngine\Prism.Vanilla.Billboard\Shaders", Path.Combine(MyFileSystem.ShadersBasePath, "Shaders"));
         _vsQuad  = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_quad");
         _vsTri   = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_tri");
         _vsPoint = compiler.CompileVertex(MyRender11.DeviceInstance, "billboard.hlsl", "vs_point");
@@ -189,6 +210,8 @@ public static class Patch_MyBillboardRenderer
                     defines.Add(new ShaderMacro("ALPHA_CUTOUT", null));
                 if ((flag & BillboardFlags.OIT) != 0)
                     defines.Add(new ShaderMacro("OIT", null));
+                if ((flag & BillboardFlags.SoftParticle) != 0)
+                    defines.Add(new ShaderMacro("SOFT_PARTICLE", null));
 
                 _pixelShaders[pass, (int)flag] = compiler.CompilePixel(MyRender11.DeviceInstance, "billboard.hlsl", "ps", defines.ToArray());
                 defines.Clear();
@@ -496,6 +519,11 @@ public static class Patch_MyBillboardRenderer
 
         BindCommonResources(rc);
         rc.SetVertexBuffer(0, group.InstanceBuffer);
+        rc.PixelShader.SetSrv(2, depthRead);
+
+        BillboardFlags globalFlags = BillboardFlags.None;
+        globalFlags |= oit ? BillboardFlags.OIT : BillboardFlags.None;
+        globalFlags |= depthRead != null ? BillboardFlags.SoftParticle : BillboardFlags.None;
 
         int instanceOffset = 0;
         // needs to be ordered for correct render order
@@ -510,13 +538,9 @@ public static class Patch_MyBillboardRenderer
                 rc.AllShaderStages.SetConstantBuffer(1, _cbvMaterials, materialCbvStride * material.MaterialInfoIndex, materialCbvStride);
 
                 // texture
-                rc.AllShaderStages.SetSrv(1, material.Texture);
+                rc.PixelShader.SetSrv(1, material.Texture);
 
-                BillboardFlags flags = BillboardFlags.None;
-                flags |= material.EnableAlphaCutout ? BillboardFlags.AlphaCutout : BillboardFlags.None;
-                flags |= material.Texture.Format is Format.BC4_UNorm ? BillboardFlags.SingleChannel : BillboardFlags.None;
-                flags |= oit ? BillboardFlags.OIT : BillboardFlags.None;
-
+                BillboardFlags flags = globalFlags | material.Flags;
                 rc.PixelShader.Set(_pixelShaders[(int)blendType, (int)flags]);
 
                 if (batch.Quads.Count > 0)

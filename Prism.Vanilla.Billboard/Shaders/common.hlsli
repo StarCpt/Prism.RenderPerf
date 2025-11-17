@@ -73,6 +73,9 @@ struct MaterialInfo
     uint PackedUVOffset;
     uint PackedUVSize;
     
+    float AlphaSaturation;
+    float SoftParticleDistanceScale;
+    
     float2 UnpackUVOffset()
     {
         return ((Half2) PackedUVOffset).Unpack();
@@ -121,14 +124,4 @@ void WeightedOITCendos(float4 color, float linearZ, out float4 accumTarget, out 
 
     // Blend Func: zero, 1-source
     coverageTarget = color.a;
-}
-
-float linearize_depth(float depth, float proj33, float proj43)
-{
-    return -proj43 / (max(depth, 1e-36) + proj33);
-}
-
-float linearize_depth(float depth, matrix projmatrix)
-{
-    return linearize_depth(depth, projmatrix._33, projmatrix._43);
 }

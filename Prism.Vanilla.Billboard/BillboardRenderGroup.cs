@@ -235,16 +235,10 @@ class BillboardRenderGroup : IDisposable
 
     public static bool TryGetParentMatrix(MyBillboard billboard, out MatrixD matrix)
     {
-        if (billboard.ParentID is uint.MaxValue)
-        {
-            matrix = default;
-            return false;
-        }
-
-        MyActor parent = MyIDTracker<MyActor>.FindByID(billboard.ParentID);
+        MyActor? parent = billboard.ParentID != uint.MaxValue ? MyIDTracker<MyActor>.FindByID(billboard.ParentID) : null;
         if (parent is null)
         {
-            matrix = default;
+            matrix = MatrixD.Identity;
             return false;
         }
 
