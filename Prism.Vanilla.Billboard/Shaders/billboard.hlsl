@@ -112,7 +112,7 @@ void vs_tri(uint vertexId : SV_VertexID, VS_INPUT_TRI input, out VS_Output resul
     result.AlphaCutout = input.AlphaCutout;
     result.SoftParticleDistanceScale = input.SoftParticleDistanceScale * Material.SoftParticleDistanceScale;
     
-    result.Normal = input.Normal;
+    result.Normal = normalize(input.Normal);
     
 #if defined(LIT_PARTICLE)
     result.Light = GetVertexLight(input.Vertices[vertexId].xyz);
