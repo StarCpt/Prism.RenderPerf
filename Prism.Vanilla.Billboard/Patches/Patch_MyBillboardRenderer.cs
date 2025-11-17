@@ -14,6 +14,7 @@ using VRage.Render11.Common;
 using VRage.Render11.RenderContext;
 using VRage.Render11.Resources;
 using VRage.Render11.Resources.Textures;
+using VRage.Render11.Sprites;
 using VRage.Utils;
 using VRageMath;
 using VRageMath.PackedVector;
@@ -109,7 +110,9 @@ class Material
         }
         else if (_material.TextureType is MyTransparentMaterialTextureType.RenderTarget)
         {
-            // TODO
+            MySpriteMessageData drawMessages = MyManagers.SpritesManager.AcquireDrawMessages(_material.Id.String);
+            Texture = MyRender11.DrawSpritesOffscreen(drawMessages, _material.Id.String, _material.TargetSize.X, _material.TargetSize.Y);
+            MyManagers.SpritesManager.DisposeDrawMessages(drawMessages);
         }
         else
         {
@@ -241,7 +244,6 @@ public static class Patch_MyBillboardRenderer
             new InputElement("UVSIZE",                0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("COLOR",                 0, Format.R16G16B16A16_Float, -1, 0, InputClassification.PerInstanceData, 1),
         });
-
         _ilTri = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode(MyRender11.DeviceInstance, "billboard.hlsl", "vs_tri"), new InputElement[]
         {
             new InputElement("POSITION",              0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1), // V0
@@ -260,7 +262,6 @@ public static class Patch_MyBillboardRenderer
 
             new InputElement("COLOR",                 0, Format.R16G16B16A16_Float, -1, 0, InputClassification.PerInstanceData, 1),
         });
-
         _ilPoint = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode(MyRender11.DeviceInstance, "billboard.hlsl", "vs_point"), new InputElement[]
         {
             new InputElement("POSITION",              0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1),
@@ -276,7 +277,6 @@ public static class Patch_MyBillboardRenderer
             new InputElement("UVSIZE",                0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("COLOR",                 0, Format.R16G16B16A16_Float, -1, 0, InputClassification.PerInstanceData, 1),
         });
-
         _ilLine = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode(MyRender11.DeviceInstance, "billboard.hlsl", "vs_line"), new InputElement[]
         {
             new InputElement("POSITION",              0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1),
