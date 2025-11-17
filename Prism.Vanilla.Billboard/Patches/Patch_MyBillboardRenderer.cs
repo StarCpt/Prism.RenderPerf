@@ -160,10 +160,9 @@ public static class Patch_MyBillboardRenderer
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
-    static bool _init = false;
     static bool _reloadShaders = false;
 
-    private static unsafe void Init()
+    public static unsafe void Init()
     {
         for (int i = 0; i < _renderGroups.Length; i++)
         {
@@ -299,12 +298,6 @@ public static class Patch_MyBillboardRenderer
     [HarmonyPrefix]
     public static bool Gather_Prefix(MyRenderContext rc, bool immediateContext)
     {
-        if (!_init)
-        {
-            Init();
-            _init = true;
-        }
-
         if (_reloadShaders)
         {
             ReloadShadersInternal();
@@ -339,7 +332,10 @@ public static class Patch_MyBillboardRenderer
 
         static void AddToGroup(MyBillboard billboard)
         {
-            _renderGroups[(int)billboard.BlendType].Add(billboard);
+            if (billboard.Material != MyStringId.NullOrEmpty)
+            {
+                _renderGroups[(int)billboard.BlendType].Add(billboard);
+            }
         }
     }
 
@@ -353,10 +349,9 @@ public static class Patch_MyBillboardRenderer
             if (group.TotalBillboardCount == 0)
                 continue;
 
-            foreach (var kv in group.Batches)
+            foreach (var (materialId, batch) in group.Batches)
             {
-                var materialId = kv.Key;
-                if (kv.Value.BillboardCount == 0 || materialId == MyStringId.NullOrEmpty)
+                if (batch.BillboardCount == 0)
                     continue;
 
                 if (!_materials.ContainsKey(materialId))

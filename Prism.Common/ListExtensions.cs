@@ -66,5 +66,22 @@ namespace System.Collections.Generic
                 ListAccessor<T>.VersionFieldRef(list)++;
             }
         }
+
+        public static ref T AddRef<T>(this List<T> list)
+        {
+            int capacity = list.Capacity;
+            if (capacity == list.Count)
+            {
+                int newCapacity = capacity == 0 ? 4 : (capacity * 2);
+                if ((uint)newCapacity > 2146435071u)
+                {
+                    newCapacity = 2146435071;
+                }
+                list.Capacity = newCapacity;
+            }
+
+            ListAccessor<T>.VersionFieldRef(list)++;
+            return ref ArrayAccessor<T>.Getter(list)[ListAccessor<T>.SizeFieldRef(list)++];
+        }
     }
 }

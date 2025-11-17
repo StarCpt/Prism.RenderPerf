@@ -15,6 +15,7 @@ public class Plugin : IPlugin
 
     public void Init(object gameInstance)
     {
+        Patch_MyBillboardRenderer.Init();
     }
 
     public void Update()
