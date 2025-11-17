@@ -629,6 +629,7 @@ public static class Patch_MyBillboardRenderer
         rc.AllShaderStages.SetConstantBuffer(4, MyManagers.Shadows.ShadowCascades.CascadeConstantBuffer);
 
         rc.VertexShader.SetSamplers(0, MySamplerStateManager.StandardSamplers);
+        rc.PixelShader.SetSamplers(0, MySamplerStateManager.StandardSamplers);
         rc.VertexShader.SetSampler(15, MySamplerStateManager.Shadowmap);
 
         rc.VertexShader.SetSrv(16, MyManagers.Shadows.ShadowCascades.CascadeShadowmapArray);

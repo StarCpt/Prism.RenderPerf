@@ -185,9 +185,9 @@ float4 ps(VS_Output input) : SV_Target0
 #endif
     
 #if defined(SOFT_PARTICLE)
-    float linearSceneDepth = linearize_depth(DepthTexture[input.Position.xy], ProjMatrix);
-    float linearParticleDepth = linearize_depth(input.Position.z, ProjMatrix);
-    float softParticleFade = CalcSoftParticle(input.SoftParticleDistanceScale, -linearSceneDepth, -linearParticleDepth);
+    float linearSceneDepth = linearize_depth(DepthTexture[input.Position.xy], frame_.Environment.projection_matrix);
+    float linearParticleDepth = linearize_depth(input.Position.z, frame_.Environment.projection_matrix);
+    float softParticleFade = CalcSoftParticle(input.SoftParticleDistanceScale, linearSceneDepth, linearParticleDepth);
     color *= softParticleFade;
 #endif
     
@@ -207,7 +207,7 @@ float4 ps(VS_Output input) : SV_Target0
 #endif
     
 #if defined(OIT)
-    float linearDepth = linearize_depth(input.Position.z, ProjMatrix);
+    float linearDepth = linearize_depth(input.Position.z, frame_.Environment.projection_matrix);
     WeightedOITCendos(color, linearDepth, color, coverageTarget);
 #endif
     
