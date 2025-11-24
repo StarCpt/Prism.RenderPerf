@@ -9,11 +9,11 @@
 
   <ItemGroup>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>..\Bin64\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <HintPath>$(Bin64)\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Math">
-      <HintPath>..\Bin64\VRage.Math.dll</HintPath>
+      <HintPath>$(Bin64)\VRage.Math.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
