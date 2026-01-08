@@ -2,8 +2,5 @@
   <PropertyGroup>
     <!-- Folder containing SpaceEngineers.exe -->
     <Bin64>C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64</Bin64>
-
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
 </Project>

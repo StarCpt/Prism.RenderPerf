@@ -5,6 +5,9 @@ using System.Reflection;
 using VRage.Input;
 using VRage.Plugins;
 
+[assembly: AssemblyVersion("1.0.1.0")]
+[assembly: AssemblyFileVersion("1.0.1.0")]
+
 namespace Prism.RenderPerf;
 
 public class Plugin : IPlugin
