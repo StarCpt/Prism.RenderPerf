@@ -315,7 +315,7 @@ public static class BillboardRenderer
             mapping.WriteAndPosition(ref frameData);
 
             Vector2 viewport = MyRender11.ViewportResolutionF;
-            for (int i = -1; i < NUM_RENDER_PASSES; i++)
+            for (int i = -1; i < CUSTOM_VIEWPROJ_COUNT; i++)
             {
                 if (i == -1)
                     mapping.WriteAndPosition(ref matrices.ViewProjectionAt0);
@@ -330,7 +330,7 @@ public static class BillboardRenderer
                             data.Viewport.OffsetX / viewport.X,
                             (viewport.Y - data.Viewport.OffsetY - data.Viewport.Height) / viewport.Y,
                             0f, 1f);
-                        Matrix viewProj = Matrix.Transpose(data.ViewAtZero * data.Projection * proj2);
+                        Matrix viewProj = data.ViewAtZero * data.Projection * proj2;
                         mapping.WriteAndPosition(ref viewProj);
                     }
                     else
