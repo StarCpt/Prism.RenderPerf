@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Prism.RenderPerf.Billboards;
+using System.IO;
 using System.Reflection;
 using VRage.Input;
 using VRage.Plugins;
@@ -12,6 +13,9 @@ public class Plugin : IPlugin
 
     public Plugin()
     {
+#if DEV
+        ShaderDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Shaders");
+#endif
         new Harmony(GetType().FullName).PatchAll(Assembly.GetExecutingAssembly());
     }
 
