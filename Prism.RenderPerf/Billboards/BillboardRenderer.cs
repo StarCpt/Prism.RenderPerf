@@ -121,7 +121,7 @@ public static class BillboardRenderer
             }
         }
 
-        _ilQuad = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode(MyRender11.DeviceInstance, "billboard.hlsl", "vs_quad"), new InputElement[]
+        _ilQuad = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode("billboard.hlsl", "vs_quad"), new InputElement[]
         {
             new InputElement("POSITION",              0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1), // V0
             new InputElement("VIEWPROJ",              0, Format.R32_UInt,           -1, 0, InputClassification.PerInstanceData, 1),
@@ -139,7 +139,7 @@ public static class BillboardRenderer
             new InputElement("UVSIZE",                0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("COLOR",                 0, Format.R16G16B16A16_Float, -1, 0, InputClassification.PerInstanceData, 1),
         });
-        _ilTri = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode(MyRender11.DeviceInstance, "billboard.hlsl", "vs_tri"), new InputElement[]
+        _ilTri = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode("billboard.hlsl", "vs_tri"), new InputElement[]
         {
             new InputElement("POSITION",              0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1), // V0
             new InputElement("TEXCOORD",              0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1), // UV0
@@ -160,7 +160,7 @@ public static class BillboardRenderer
 
             new InputElement("COLOR",                 0, Format.R16G16B16A16_Float, -1, 0, InputClassification.PerInstanceData, 1),
         });
-        _ilPoint = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode(MyRender11.DeviceInstance, "billboard.hlsl", "vs_point"), new InputElement[]
+        _ilPoint = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode("billboard.hlsl", "vs_point"), new InputElement[]
         {
             new InputElement("POSITION",              0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("RADIUS",                0, Format.R16_Float,          -1, 0, InputClassification.PerInstanceData, 1),
@@ -175,7 +175,7 @@ public static class BillboardRenderer
             new InputElement("UVSIZE",                0, Format.R16G16_Float,       -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("COLOR",                 0, Format.R16G16B16A16_Float, -1, 0, InputClassification.PerInstanceData, 1),
         });
-        _ilLine = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode(MyRender11.DeviceInstance, "billboard.hlsl", "vs_line"), new InputElement[]
+        _ilLine = new InputLayout(MyRender11.DeviceInstance, compiler.CompileVertexBytecode("billboard.hlsl", "vs_line"), new InputElement[]
         {
             new InputElement("POSITION",              0, Format.R32G32B32_Float,    -1, 0, InputClassification.PerInstanceData, 1),
             new InputElement("LENGTH",                0, Format.R32_Float,          -1, 0, InputClassification.PerInstanceData, 1),
