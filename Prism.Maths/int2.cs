@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -6,6 +7,7 @@ using System.Runtime.InteropServices;
 namespace Prism.Maths
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    [DebuggerDisplay("X:{X}, Y:{Y}")]
     public struct int2 : IEquatable<int2>
     {
         public static readonly int2 Zero = 0;
@@ -33,6 +35,8 @@ namespace Prism.Maths
         public static int2 operator *(in int2 a, in int2 b) => new int2(a.X * b.X, a.Y * b.Y);
         public static int2 operator /(in int2 a, in int2 b) => new int2(a.X / b.X, a.Y / b.Y);
         public static int2 operator -(in int2 vec) => new int2(-vec.X, -vec.Y);
+        public static int2 operator <<(int2 a, int b) => new int2(a.X << b, a.Y << b);
+        public static int2 operator >>(int2 a, int b) => new int2(a.X >> b, a.Y >> b);
 
         public readonly bool Equals(int2 other) => X == other.X && Y == other.Y;
         public static bool operator ==(in int2 a, in int2 b) => a.Equals(b);

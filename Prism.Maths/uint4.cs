@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 #pragma warning disable IDE1006 // Naming Styles
 namespace Prism.Maths
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    [DebuggerDisplay("X:{X}, Y:{Y}, Z:{Z}, W:{W}")]
     public struct uint4
     {
         public static readonly uint4 Zero = 0;
@@ -31,6 +32,8 @@ namespace Prism.Maths
 
         public static implicit operator int4(in uint4 vec) => new int4((int)vec.X, (int)vec.Y, (int)vec.Z, (int)vec.W);
         public static implicit operator float4(in uint4 vec) => new float4(vec.X, vec.Y, vec.Z, vec.W);
+
+        public static explicit operator uint4(int4 vec) => new uint4((uint)vec.X, (uint)vec.Y, (uint)vec.Z, (uint)vec.W);
 
         public static uint4 Min(uint4 a, uint4 b)
         {

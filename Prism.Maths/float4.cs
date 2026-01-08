@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -6,6 +7,7 @@ using System.Runtime.InteropServices;
 namespace Prism.Maths
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    [DebuggerDisplay("X:{X}, Y:{Y}, Z:{Z}, W:{W}")]
     public struct float4 : IEquatable<float4>
     {
         public static readonly float4 Zero = 0;
