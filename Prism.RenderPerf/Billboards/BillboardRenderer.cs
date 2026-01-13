@@ -415,10 +415,9 @@ public static class BillboardRenderer
         int instanceOffset = 0;
         // needs to be ordered for correct render order
         // some mods like BuildInfo depend on this behavior to render ui elements properly
-        foreach (var kv in group.Batches.Where(i => i.Value.BillboardCount > 0).OrderByDescending(i => i.Key.Id))
+        foreach (var (materialId, batch) in group.GetOrderedBatches())
         {
-            var batch = kv.Value;
-            if (_materials.TryGetValue(kv.Key, out var material) && material.Texture is not null)
+            if (_materials.TryGetValue(materialId, out var material) && material.Texture is not null)
             {
                 // material info cbv
                 int materialCbvStride = Align(sizeof(MaterialInfo), 16 * 16);

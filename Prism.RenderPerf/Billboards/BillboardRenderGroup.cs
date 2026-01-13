@@ -36,6 +36,8 @@ class BillboardRenderGroup : IDisposable
 
     public MyBillboard.BlendTypeEnum BlendType { get; }
     public readonly Dictionary<MyStringId, Batch> Batches = new(MyStringId.Comparer);
+    private readonly List<MyStringId> _batchOrder = [];
+    private bool _batchOrderSorted = false;
     public int TotalBillboardCount { get; private set; } = 0;
 
     public IVertexBuffer? InstanceBuffer { get; private set; }
@@ -48,6 +50,10 @@ class BillboardRenderGroup : IDisposable
     public void Add(MyBillboard billboard)
     {
         var batch = Batches.GetValueOrNew(billboard.Material);
+        if (batch.BillboardCount == 0)
+        {
+            _batchOrder.Add(billboard.Material);
+        }
 
         if (billboard.LocalType is MyBillboard.LocalTypeEnum.Custom)
         {
@@ -264,13 +270,27 @@ class BillboardRenderGroup : IDisposable
         }
 
         using var mapping = InstanceBuffer.MapWriteDiscard(rc);
-        foreach (var batch in Batches.Where(i => i.Value.BillboardCount > 0).OrderByDescending(i => i.Key.Id))
+        foreach (var (_, batch) in GetOrderedBatches())
         {
-            mapping.WriteAndPosition(batch.Value.Quads.AsSpan());
-            mapping.WriteAndPosition(batch.Value.Triangles.AsSpan());
-            mapping.WriteAndPosition(batch.Value.Points.AsSpan());
-            mapping.WriteAndPosition(batch.Value.Lines.AsSpan());
+            mapping.WriteAndPosition(batch.Quads.AsSpan());
+            mapping.WriteAndPosition(batch.Triangles.AsSpan());
+            mapping.WriteAndPosition(batch.Points.AsSpan());
+            mapping.WriteAndPosition(batch.Lines.AsSpan());
         }
+    }
+
+    public IEnumerable<(MyStringId, Batch)> GetOrderedBatches()
+    {
+        // not sorted when LDR/SDR or PostPP
+        if (BlendType is not (MyBillboard.BlendTypeEnum)3 and not (MyBillboard.BlendTypeEnum)4)
+        {
+            if (!_batchOrderSorted)
+            {
+                _batchOrderSorted = true;
+                _batchOrder.Sort(MyStringId.Comparer);
+            }
+        }
+        return _batchOrder.Select(i => (i, Batches[i]));
     }
 
     public void Clear()
@@ -279,6 +299,8 @@ class BillboardRenderGroup : IDisposable
         {
             batch.Clear();
         }
+        _batchOrder.ClearFast();
+        _batchOrderSorted = false;
         TotalBillboardCount = 0;
     }
 
