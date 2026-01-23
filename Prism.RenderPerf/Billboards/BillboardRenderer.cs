@@ -46,6 +46,8 @@ public static class BillboardRenderer
     static InputLayout _ilPoint;
     static InputLayout _ilLine;
 
+    static bool _commandListEmulated;
+
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
     public static unsafe void Init()
@@ -75,6 +77,8 @@ public static class BillboardRenderer
         {
             _indices = MyManagers.Buffers.CreateIndexBuffer("Prism.RenderPerf.Billboards.Indices", 6, (IntPtr)ptr, MyIndexBufferFormat.UShort, ResourceUsage.Immutable, true);
         }
+
+        MyRender11.DeviceInstance.CheckThreadingSupport(out _, out _commandListEmulated);
 
         ReloadShadersInternal();
     }
@@ -419,6 +423,9 @@ public static class BillboardRenderer
         globalFlags |= oit ? BillboardFlags.OIT : BillboardFlags.None;
         globalFlags |= depthRead != null ? BillboardFlags.SoftParticle : BillboardFlags.None;
 
+        // when the driver is emulating command lists, we need to set the cbv slot to null if we're only changing the offset/size of the binding
+        bool needToUnbindCbv = _commandListEmulated;
+
         int instanceOffset = 0;
         // needs to be ordered for correct render order
         // some mods like BuildInfo depend on this behavior to render ui elements properly
@@ -428,7 +435,8 @@ public static class BillboardRenderer
             {
                 // material info cbv
                 int materialCbvStride = Align(sizeof(MaterialInfo), 16 * 16);
-                rc.AllShaderStages.SetConstantBuffer(2, _cbvMaterials, materialCbvStride * material.MaterialInfoIndex, materialCbvStride);
+                rc.VertexShader.SetConstantBuffer(2, _cbvMaterials, materialCbvStride * material.MaterialInfoIndex, materialCbvStride);
+                rc.PixelShader.SetConstantBuffer(2, _cbvMaterials, materialCbvStride * material.MaterialInfoIndex, materialCbvStride);
 
                 // texture
                 rc.PixelShader.SetSrv(0, material.Texture);
@@ -466,6 +474,12 @@ public static class BillboardRenderer
                     rc.VertexShader.Set(lit && material.Lit ? _vsLineLit : _vsLine);
                     rc.DrawIndexedInstanced(6, batch.Lines.Count, 0, 0, instanceOffset);
                     instanceOffset += batch.Lines.Count;
+                }
+
+                if (needToUnbindCbv)
+                {
+                    rc.VertexShader.m_shaderStage.SetConstantBuffer(2, null);
+                    rc.PixelShader.m_shaderStage.SetConstantBuffer(2, null);
                 }
             }
             else

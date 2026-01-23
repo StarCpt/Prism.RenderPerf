@@ -19,25 +19,36 @@ public static class Extensions
         return new BufferMapping(rc.DeviceContext, buffer.Buffer, MapMode.WriteDiscard);
     }
 
-    public static void SetConstantBuffer(this MyAllShaderStages stage, int slot, IConstantBuffer constantBuffer, int offsetInBytes, int num16ByteConstants)
+    [ThreadStatic]
+    private static (Buffer[], int[], int[])? _temp = null;
+
+    public static unsafe void SetConstantBuffer(this MyVertexStage stage, int slot, IConstantBuffer constantBuffer, int offsetInBytes, int num16ByteConstants)
     {
         if (offsetInBytes % 256 != 0)
             throw new Exception("Constant buffer offset must be a multiple of 256 bytes.");
 
-        Buffer[] cbvs = [constantBuffer.Buffer];
-        int[] offsets = [offsetInBytes / 16];
-        int[] nums = [num16ByteConstants];
+        var (cbvs, offsets, nums) = _temp ??= (new Buffer[1], new int[1], new int[1]);
+        cbvs[0] = constantBuffer.Buffer;
+        offsets[0] = offsetInBytes / 16;
+        nums[0] = num16ByteConstants;
 
-        stage.m_vertexStage.m_constantBuffers[slot] = null;
-        stage.m_pixelStage.m_constantBuffers[slot] = null;
-        stage.m_computeStage.m_constantBuffers[slot] = null;
+        stage.m_constantBuffers[slot] = null;
+        ((DeviceContext1)stage.m_deviceContext).VSSetConstantBuffers1(slot, 1, cbvs, offsets, nums);
+        stage.m_statistics.SetConstantBuffers++;
+    }
 
-        ((DeviceContext1)stage.m_vertexStage.m_deviceContext).VSSetConstantBuffers1(slot, 1, cbvs, offsets, nums);
-        ((DeviceContext1)stage.m_pixelStage.m_deviceContext).PSSetConstantBuffers1(slot, 1, cbvs, offsets, nums);
-        ((DeviceContext1)stage.m_computeStage.m_deviceContext).CSSetConstantBuffers1(slot, 1, cbvs, offsets, nums);
+    public static unsafe void SetConstantBuffer(this MyPixelStage stage, int slot, IConstantBuffer constantBuffer, int offsetInBytes, int num16ByteConstants)
+    {
+        if (offsetInBytes % 256 != 0)
+            throw new Exception("Constant buffer offset must be a multiple of 256 bytes.");
 
-        stage.m_vertexStage.m_statistics.SetConstantBuffers++;
-        stage.m_pixelStage.m_statistics.SetConstantBuffers++;
-        stage.m_computeStage.m_statistics.SetConstantBuffers++;
+        var (cbvs, offsets, nums) = _temp ??= (new Buffer[1], new int[1], new int[1]);
+        cbvs[0] = constantBuffer.Buffer;
+        offsets[0] = offsetInBytes / 16;
+        nums[0] = num16ByteConstants;
+
+        stage.m_constantBuffers[slot] = null;
+        ((DeviceContext1)stage.m_deviceContext).PSSetConstantBuffers1(slot, 1, cbvs, offsets, nums);
+        stage.m_statistics.SetConstantBuffers++;
     }
 }
