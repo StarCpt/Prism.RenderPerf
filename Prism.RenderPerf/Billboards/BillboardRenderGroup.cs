@@ -15,7 +15,7 @@ using VRageRender;
 
 namespace Prism.RenderPerf.Billboards;
 
-class BillboardRenderGroup : IDisposable
+abstract class BillboardRenderGroup : IDisposable
 {
     public class Batch
     {
@@ -35,25 +35,20 @@ class BillboardRenderGroup : IDisposable
     }
 
     public MyBillboard.BlendTypeEnum BlendType { get; }
-    public readonly Dictionary<MyStringId, Batch> Batches = new(MyStringId.Comparer);
-    private readonly List<MyStringId> _batchOrder = [];
-    private bool _batchOrderSorted = false;
     public int TotalBillboardCount { get; private set; } = 0;
 
     public IVertexBuffer? InstanceBuffer { get; private set; }
 
-    public BillboardRenderGroup(MyBillboard.BlendTypeEnum blendType)
+    protected BillboardRenderGroup(MyBillboard.BlendTypeEnum blendType)
     {
         BlendType = blendType;
     }
 
+    protected abstract Batch GetOrCreateBatch(MyStringId materialId);
+
     public void Add(MyBillboard billboard)
     {
-        var batch = Batches.GetValueOrNew(billboard.Material);
-        if (batch.BillboardCount == 0)
-        {
-            _batchOrder.Add(billboard.Material);
-        }
+        var batch = GetOrCreateBatch(billboard.Material);
 
         if (billboard.LocalType is MyBillboard.LocalTypeEnum.Custom)
         {
@@ -279,28 +274,11 @@ class BillboardRenderGroup : IDisposable
         }
     }
 
-    public IEnumerable<(MyStringId, Batch)> GetOrderedBatches()
-    {
-        // not sorted when LDR/SDR or PostPP
-        if (BlendType is not (MyBillboard.BlendTypeEnum)3 and not (MyBillboard.BlendTypeEnum)4)
-        {
-            if (!_batchOrderSorted)
-            {
-                _batchOrderSorted = true;
-                _batchOrder.Sort(MyStringId.Comparer);
-            }
-        }
-        return _batchOrder.Select(i => (i, Batches[i]));
-    }
+    public abstract IEnumerable<MyStringId> GetMaterialsInUse();
+    public abstract IEnumerable<(MyStringId, Batch)> GetOrderedBatches();
 
-    public void Clear()
+    public virtual void Clear()
     {
-        foreach (var batch in Batches.Values)
-        {
-            batch.Clear();
-        }
-        _batchOrder.ClearFast();
-        _batchOrderSorted = false;
         TotalBillboardCount = 0;
     }
 

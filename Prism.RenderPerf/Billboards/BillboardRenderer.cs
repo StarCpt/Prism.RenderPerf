@@ -52,7 +52,17 @@ public static class BillboardRenderer
     {
         for (int i = 0; i < _renderGroups.Length; i++)
         {
-            _renderGroups[i] = new BillboardRenderGroup((MyBillboard.BlendTypeEnum)i);
+            MyBillboard.BlendTypeEnum blendType = (MyBillboard.BlendTypeEnum)i;
+            BillboardRenderGroup group;
+            if (blendType is MyBillboard.BlendTypeEnum.LDR or MyBillboard.BlendTypeEnum.PostPP)
+            {
+                group = new BillboardRenderGroupUnordered(blendType);
+            }
+            else
+            {
+                group = new BillboardRenderGroupOrdered(blendType);
+            }
+            _renderGroups[i] = group;
         }
 
         _cbv = MyManagers.Buffers.CreateConstantBuffer("Prism.RenderPerf.Billboards.FrameConstants", sizeof(FrameConstants) + sizeof(float4x4) * 33, usage: ResourceUsage.Dynamic, isGlobal: true);
@@ -241,11 +251,8 @@ public static class BillboardRenderer
             if (group.TotalBillboardCount == 0)
                 continue;
 
-            foreach (var (materialId, batch) in group.Batches)
+            foreach (var materialId in group.GetMaterialsInUse())
             {
-                if (batch.BillboardCount == 0)
-                    continue;
-
                 if (!_materials.ContainsKey(materialId))
                 {
                     var material = new Material(materialId, _materials.Count);
