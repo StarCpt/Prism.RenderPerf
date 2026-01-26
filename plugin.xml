@@ -24,7 +24,6 @@
   
   <!-- To specify a required NuGet package, use either a list of PackageReference tags OR a Config tag. -->
   <NuGetReferences>
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
   </NuGetReferences>
 
