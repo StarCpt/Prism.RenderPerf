@@ -22,11 +22,6 @@
     <Directory>Prism.Common</Directory>
   </SourceDirectories>
   
-  <!-- To specify a required NuGet package, use either a list of PackageReference tags OR a Config tag. -->
-  <NuGetReferences>
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
-  </NuGetReferences>
-
   <!-- To specify asset files to be copied onto disk, use the AssetFolder tag. -->
   <AssetFolder>Prism.RenderPerf/Shaders</AssetFolder>
 </PluginData>
